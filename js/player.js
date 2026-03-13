@@ -1,7 +1,17 @@
+// --- L'AUTO DEL GIOCATORE ---
 const player = {
-    x: 0, y: 0, width: 40, height: 70, 
-    speedX: 0, dx: 0, speedZ: 0, maxSpeedZ: 0, minSpeedZ: 3, accelRate: 0,
-    isAccelerating: false
+    x: 0, 
+    y: 0, 
+    width: 40, 
+    height: 70, 
+    speedX: 0,      
+    dx: 0,          
+    speedZ: 0,      
+    maxSpeedZ: 0,  
+    minSpeedZ: 3,   
+    accelRate: 0,
+    isAccelerating: false,
+    hasAcceleratedOnce: false // Capisce se hai iniziato a correre
 };
 
 function resetPlayer() {
@@ -9,30 +19,38 @@ function resetPlayer() {
     player.y = canvas.height - 120;
     player.dx = 0;
     player.isAccelerating = false;
+    player.hasAcceleratedOnce = false; // Reset a inizio partita
     
-    // CARICA LE STATISTICHE DAL GARAGE!
+    // Legge le statistiche dal garage
     player.speedX = playerProfile.stats.handling;
     player.accelRate = playerProfile.stats.acceleration;
     player.maxSpeedZ = playerProfile.stats.maxSpeed;
     player.speedZ = player.minSpeedZ; 
 }
 
-// Comandi PC
+// --- COMANDI DA TASTIERA (PC) ---
 document.addEventListener('keydown', (e) => {
     if (isGameOver) return;
     const key = e.key.toLowerCase();
+    
     if (key === 'a' || key === 'arrowleft') player.dx = -player.speedX;
-    if (key === 'd' || key === 'arrowright') player.dx = player.speedX;
+    else if (key === 'd' || key === 'arrowright') player.dx = player.speedX;
+    
     if (key === 'w' || key === 'arrowup') player.isAccelerating = true;
 });
 
 document.addEventListener('keyup', (e) => {
     const key = e.key.toLowerCase();
-    if (key === 'a' || key === 'arrowleft' || key === 'd' || key === 'arrowright') player.dx = 0;
-    if (key === 'w' || key === 'arrowup') player.isAccelerating = false;
+    
+    if (key === 'a' || key === 'arrowleft' || key === 'd' || key === 'arrowright') {
+        player.dx = 0;
+    }
+    else if (key === 'w' || key === 'arrowup') {
+        player.isAccelerating = false;
+    }
 });
 
-// Comandi Mobile
+// --- COMANDI TOUCH (MOBILE) ---
 function setupTouchControls() {
     let isDragging = false;
     let previousTouchX = 0;
@@ -49,8 +67,10 @@ function setupTouchControls() {
         e.preventDefault(); 
         const currentTouchX = e.touches[0].clientX;
         player.x += (currentTouchX - previousTouchX); 
+        
         if (player.x < 10) player.x = 10;
         if (player.x + player.width > canvas.width - 10) player.x = canvas.width - player.width - 10;
+
         previousTouchX = currentTouchX;
     }, { passive: false });
 
@@ -60,19 +80,18 @@ function setupTouchControls() {
     });
 }
 
-// Fisica
-// Fisica e Movimento
+// --- FISICA E DISEGNO ---
 function updatePlayer() {
     player.x += player.dx;
     if (player.x < 10) player.x = 10;
     if (player.x + player.width > canvas.width - 10) player.x = canvas.width - player.width - 10;
 
     if (player.isAccelerating) {
-        player.speedZ += player.accelRate; // Ora è 0.05 dal garage
+        player.hasAcceleratedOnce = true; // Hai premuto il gas!
+        player.speedZ += player.accelRate; 
         if (player.speedZ > player.maxSpeedZ) player.speedZ = player.maxSpeedZ;
     } else {
-        // La decelerazione deve essere bilanciata con la nuova accelerazione
-        player.speedZ -= 0.1; // Prima era 0.4
+        player.speedZ -= 0.1; 
         if (player.speedZ < player.minSpeedZ) player.speedZ = player.minSpeedZ;
     }
 }
