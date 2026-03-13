@@ -46,9 +46,12 @@ function runGameLoop() {
 
     updateScore();        
 
-    // --- COLLEGAMENTO VELOCITÀ -> SUONO MOTORE ---
-    // Calcola il pitch in base alla velocità attuale rispetto alla massima
-    let pitch = 0.8 + (player.speedZ / playerProfile.stats.maxSpeed) * 1.5;
+    // --- LOGICA VELOCITÀ -> SUONO MOTORE ---
+    // Il pitch sale con la velocità, ma viene influenzato dalla marcia attuale
+    // per simulare che in marce basse i giri salgano più velocemente.
+    let speedRatio = (player.speedZ / playerProfile.stats.maxSpeed);
+    let pitch = 0.6 + (speedRatio * 1.2) + (currentGear * 0.1); 
+    
     engineSound.playbackRate = Math.max(0.5, Math.min(pitch, 2.5));
 
     frames++;
@@ -63,17 +66,23 @@ function updateScoreDisplay() {
     const speedElement = document.getElementById('speedometer');
     if (speedElement) speedElement.innerText = `${visualSpeed} km/h`;
 
-    // --- LOGICA CAMBIO MARCIA E SUONO ---
+    // --- LOGICA CAMBIO MARCIA (UP & DOWN) ---
     let newGear = 1;
     if (visualSpeed > 100) newGear = 5;
     else if (visualSpeed > 75) newGear = 4;
     else if (visualSpeed > 50) newGear = 3;
     else if (visualSpeed > 35) newGear = 2;
 
-    if (newGear > currentGear) {
+    // Se la marcia è cambiata (sia in su che in giù)
+    if (newGear !== currentGear) {
         shiftSound.currentTime = 0;
         shiftSound.play().catch(e => {});
+        
+        // Effetto "stacco": abbassiamo un attimo il volume o il pitch per simulare il cambio
+        engineSound.volume = 0.2; 
+        setTimeout(() => { if(!isPaused && !isGameOver) engineSound.volume = 0.5; }, 150);
     }
+    
     currentGear = newGear;
     const gearElement = document.getElementById('gear-display');
     if (gearElement) gearElement.innerText = `Marcia: ${currentGear}`;
@@ -82,20 +91,21 @@ function updateScoreDisplay() {
 function triggerGameOver() {
     isGameOver = true;
     engineSound.pause(); 
-    crashSound.play().catch(e => {}); // Suono incidente
+    crashSound.play().catch(e => {}); 
     stopEngine();
     addBanknotes(Math.floor(score / 5)); 
     window.lastScore = score; window.lastCash = Math.floor(score / 5);
     setTimeout(() => { loadScreen('result'); }, 800);
 }
 
-// Funzioni di supporto (Pausa, Road, Engine) come nelle versioni precedenti
 function togglePause() {
     isPaused = !isPaused;
     if (isPaused) { engineSound.pause(); document.getElementById('pause-menu').style.display = 'flex'; }
     else { engineSound.play(); document.getElementById('pause-menu').style.display = 'none'; runGameLoop(); }
 }
+
 function quitGame() { isGameOver = true; stopEngine(); loadScreen('home'); }
+
 function drawRoad() {
     ctx.fillStyle = '#444'; ctx.fillRect(0, 0, canvas.width, canvas.height);
     roadOffset = (roadOffset + player.speedZ) % 40; 
@@ -105,6 +115,13 @@ function drawRoad() {
         ctx.fillRect(canvas.width / 2 + 1, i + roadOffset, 2, 20);
     }
 }
-function updateScore() { if (frames % 10 === 0) { score += isContromano() ? (Math.floor(player.speedZ / 3) * 2) : Math.floor(player.speedZ / 3); updateScoreDisplay(); } }
+
+function updateScore() { 
+    if (frames % 10 === 0) { 
+        score += isContromano() ? (Math.floor(player.speedZ / 3) * 2) : Math.floor(player.speedZ / 3); 
+        updateScoreDisplay(); 
+    } 
+}
+
 function startEngine() { runGameLoop(); }
 function stopEngine() { cancelAnimationFrame(gameLoopId); engineSound.pause(); }
