@@ -1,0 +1,81 @@
+/* Reset generale */
+body, html {
+    margin: 0; padding: 0;
+    width: 100%; height: 100%;
+    background-color: #222;
+    font-family: 'Arial', sans-serif;
+    color: white;
+    overflow: hidden; /* Evita lo scroll fastidioso su mobile */
+}
+
+/* Contenitore principale */
+#app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* Area che contiene le varie sezioni del menu */
+#screens-area {
+    flex-grow: 1;
+    position: relative;
+    background-color: #2a2a2a;
+}
+
+/* Stile base delle schermate (nascoste di default) */
+.screen {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0; left: 0;
+}
+
+/* Solo la schermata attiva viene mostrata */
+.screen.active {
+    display: flex;
+}
+
+/* --- BARRA DEI TAB IN BASSO --- */
+#bottom-tabs {
+    display: flex;
+    justify-content: space-around;
+    background-color: #111;
+    padding: 15px 0;
+    border-top: 2px solid #333;
+    z-index: 10;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 16px;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.tab-btn.active {
+    color: #ff5722;
+    font-weight: bold;
+}
+
+/* Bottone per avviare il gioco */
+.play-btn {
+    padding: 20px 40px;
+    font-size: 24px;
+    font-weight: bold;
+    background-color: #ff5722;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+.play-btn:hover {
+    background-color: #e64a19;
+}
