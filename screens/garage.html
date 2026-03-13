@@ -1,4 +1,37 @@
 <section id="screen-garage" class="screen active">
-    <h2>IL TUO GARAGE</h2>
-    <p>Scegli la tua auto!</p>
-    </section>
+
+    <h2 class="garage-header">GARAGE</h2>
+    <p class="garage-sub">Scegli la tua auto</p>
+
+    <!-- Placeholder vetrina -->
+    <div style="
+        background: var(--bg-card);
+        border: 1px solid var(--border-dim);
+        border-top: 2px solid var(--neon-cyan);
+        border-radius: 12px;
+        padding: 40px 32px;
+        text-align: center;
+        width: 85%;
+        max-width: 300px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 30px rgba(0,240,255,0.06);
+    ">
+        <!-- Sagoma auto ASCII-art con canvas -->
+        <div style="font-size:60px;margin-bottom:16px;filter:drop-shadow(0 0 10px rgba(0,240,255,0.6));">🏎️</div>
+        <p style="font-family:'Orbitron',monospace;font-size:16px;color:var(--neon-cyan);letter-spacing:.1em;margin-bottom:6px;">AUTO #01</p>
+        <p style="font-size:13px;color:var(--text-muted);letter-spacing:.15em;text-transform:uppercase;">In uso</p>
+
+        <div style="border-top:1px solid var(--border-dim);margin:20px 0;"></div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:left;">
+            <div>
+                <p style="font-size:11px;letter-spacing:.2em;color:var(--text-muted);text-transform:uppercase;">Velocità</p>
+                <p style="font-family:'Orbitron',monospace;font-size:18px;color:var(--text-primary);">130<span style="font-size:11px;color:var(--text-muted);"> km/h</span></p>
+            </div>
+            <div>
+                <p style="font-size:11px;letter-spacing:.2em;color:var(--text-muted);text-transform:uppercase;">Sterzata</p>
+                <p style="font-family:'Orbitron',monospace;font-size:18px;color:var(--text-primary);">5.5</p>
+            </div>
+        </div>
+    </div>
+
+</section>
