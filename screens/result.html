@@ -1,13 +1,17 @@
-<section id="screen-result" class="screen active" style="background-color: #1a1a1a;">
-    <h1 style="color: #ff2a2a; font-size: 40px; margin-bottom: 10px;">💥 INCIDENTE! 💥</h1>
-    
-    <div style="background: #333; padding: 30px; border-radius: 12px; text-align: center; width: 80%; max-width: 300px; border: 2px solid #555; box-shadow: 0 10px 20px rgba(0,0,0,0.5);">
-        <h2 style="margin-top: 0; color: #fff;">RISULTATI</h2>
-        <p style="font-size: 24px; color: #ddd; margin: 10px 0;">Punti: <strong id="result-score" style="color: #fff;">0</strong></p>
-        <div style="border-top: 1px solid #555; margin: 15px 0;"></div>
-        <p style="font-size: 22px; color: #ddd; margin: 10px 0;">Guadagno:</p>
-        <p style="font-size: 32px; color: #4CAF50; font-weight: bold; margin: 0;">💵 +<span id="result-cash">0</span></p>
+<section id="screen-result" class="screen active" style="background:radial-gradient(ellipse at 50% 20%,rgba(255,0,110,.15) 0%,transparent 60%),var(--bg-void);">
+
+    <h1 class="result-crash-title">💥 INCIDENTE 💥</h1>
+
+    <div class="result-card">
+        <p class="result-label">Punteggio finale</p>
+        <p class="result-score-value"><strong id="result-score">0</strong></p>
+
+        <hr class="result-divider">
+
+        <p class="result-label">Guadagno</p>
+        <p class="result-cash-value">💵 +<span id="result-cash">0</span></p>
     </div>
 
-    <button class="play-btn" style="margin-top: 30px;" onclick="loadScreen('home')">🏠 MENU PRINCIPALE</button>
+    <button class="play-btn" onclick="loadScreen('home')">← MENU PRINCIPALE</button>
+
 </section>
