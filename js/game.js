@@ -110,16 +110,24 @@ function updateScoreDisplay() {
     const scoreElement = document.getElementById('score');
     if (scoreElement) scoreElement.innerText = `Punti: ${score}`;
 
-    // Aggiornamento Tachimetro visivo
     const speedElement = document.getElementById('speedometer');
-    if (speedElement) {
-        // Calcola una velocità visiva (es. da 50 km/h a 240 km/h) proporzionata a speedZ
-        let visualSpeed = Math.floor((player.speedZ / playerProfile.stats.maxSpeed) * 240); 
-        if (visualSpeed < 50) visualSpeed = 50; // Velocità minima
+    const gearElement = document.getElementById('gear-display');
+
+    if (speedElement && gearElement) {
+        // La velocità del motore (speedZ) va da 3 a 13. Moltiplicata x10 ci dà i km/h esatti.
+        let visualSpeed = Math.floor(player.speedZ * 10); 
         speedElement.innerText = `${visualSpeed} km/h`;
+
+        // Logica del cambio marcia in base ai km/h
+        let gear = 1;
+        if (visualSpeed > 100) gear = 5;
+        else if (visualSpeed > 75) gear = 4;
+        else if (visualSpeed > 50) gear = 3;
+        else if (visualSpeed > 35) gear = 2;
+
+        gearElement.innerText = `Marcia: ${gear}`;
     }
 }
-
 // --- GAME OVER MODIFICATO ---
 function triggerGameOver() {
     isGameOver = true;
