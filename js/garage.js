@@ -1,19 +1,17 @@
-// Carica i dati salvati nel browser, oppure crea un profilo base per i nuovi giocatori
-let playerProfile = JSON.parse(localStorage.getItem('ryderzProfile')) || {
+// Usiamo "V2" per forzare il gioco a caricare queste nuove statistiche abbassate
+let playerProfile = JSON.parse(localStorage.getItem('ryderzProfileV2')) || {
     banknotes: 0,
     stats: {
-        handling: 6,        // Sterzata
-        acceleration: 0.2,  // Accelerazione
-        maxSpeed: 18        // Velocità Massima
+        handling: 5.5,      // Sterzata leggermente più rigida
+        acceleration: 0.05, // Molto più lenta (prima era 0.2)
+        maxSpeed: 13        // Corrisponde a 130 km/h (prima era 18)
     }
 };
 
-// Funzione per salvare le modifiche
 function saveProfile() {
-    localStorage.setItem('ryderzProfile', JSON.stringify(playerProfile));
+    localStorage.setItem('ryderzProfileV2', JSON.stringify(playerProfile));
 }
 
-// Funzione per aggiungere soldi a fine partita
 function addBanknotes(amount) {
     playerProfile.banknotes += amount;
     saveProfile();
