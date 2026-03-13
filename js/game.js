@@ -47,14 +47,12 @@ function runGameLoop() {
     
     // --- AVVISO CONTROMANO (PUNTI X2) ---
     if (isContromano()) {
-        // Fa lampeggiare la scritta leggermente usando i frames
         let alpha = 0.7 + Math.sin(frames * 0.1) * 0.3;
         ctx.fillStyle = `rgba(255, 50, 50, ${alpha})`;
         ctx.font = "bold 20px Arial";
         ctx.textAlign = "center";
-        // Disegna la scritta in alto al centro della strada
         ctx.fillText("⚠️ CONTROMANO: PUNTI X2 ⚠️", canvas.width / 2, 70);
-        ctx.textAlign = "left"; // Resetta l'allineamento
+        ctx.textAlign = "left"; 
     }
 
     updateScore();        
@@ -85,7 +83,7 @@ function drawRoad() {
 function updateScore() {
     if (frames % 10 === 0) {
         let basePoints = Math.floor(player.speedZ / 3);
-        // I punti di sopravvivenza raddoppiano se sei contromano!
+        // Raddoppia i punti se sei a sinistra
         score += isContromano() ? (basePoints * 2) : basePoints;
         updateScoreDisplay();
     }
@@ -116,7 +114,6 @@ function triggerGameOver() {
     isGameOver = true;
     stopEngine();
     
-    // Calcola il guadagno e salva nel garage
     let cashEarned = Math.floor(score / 5); 
     addBanknotes(cashEarned); 
     
