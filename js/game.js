@@ -20,7 +20,7 @@ function initGame() {
     
     // Avvio motore
     engineSound.playbackRate = 0.8;
-    engineSound.play().catch(e => {});
+    engineSound.play().catch(e => console.log("Audio play in attesa"));
     startEngine();
 }
 
@@ -47,11 +47,8 @@ function runGameLoop() {
     updateScore();        
 
     // --- LOGICA VELOCITÀ -> SUONO MOTORE ---
-    // Il pitch sale con la velocità, ma viene influenzato dalla marcia attuale
-    // per simulare che in marce basse i giri salgano più velocemente.
     let speedRatio = (player.speedZ / playerProfile.stats.maxSpeed);
     let pitch = 0.6 + (speedRatio * 1.2) + (currentGear * 0.1); 
-    
     engineSound.playbackRate = Math.max(0.5, Math.min(pitch, 2.5));
 
     frames++;
@@ -66,21 +63,23 @@ function updateScoreDisplay() {
     const speedElement = document.getElementById('speedometer');
     if (speedElement) speedElement.innerText = `${visualSpeed} km/h`;
 
-    // --- LOGICA CAMBIO MARCIA (UP & DOWN) ---
+    // --- LOGICA CAMBIO MARCIA ---
     let newGear = 1;
     if (visualSpeed > 100) newGear = 5;
     else if (visualSpeed > 75) newGear = 4;
     else if (visualSpeed > 50) newGear = 3;
     else if (visualSpeed > 35) newGear = 2;
 
-    // Se la marcia è cambiata (sia in su che in giù)
+    // Se la marcia è DIVERSA dalla precedente (su o giù), suona!
     if (newGear !== currentGear) {
-        shiftSound.currentTime = 0;
+        shiftSound.currentTime = 0; // Riparte da zero per garantire il suono anche in successione rapida
         shiftSound.play().catch(e => {});
         
-        // Effetto "stacco": abbassiamo un attimo il volume o il pitch per simulare il cambio
-        engineSound.volume = 0.2; 
-        setTimeout(() => { if(!isPaused && !isGameOver) engineSound.volume = 0.5; }, 150);
+        // Simula il calo di giri togliendo il gas per un istante
+        engineSound.volume = 0.1; 
+        setTimeout(() => { 
+            if(!isPaused && !isGameOver) engineSound.volume = 0.5; 
+        }, 200);
     }
     
     currentGear = newGear;
