@@ -1,7 +1,9 @@
 <section id="screen-game" class="screen full-screen active">
     <div id="game-ui">
-        <span id="score">Punti: 0</span>
-        <button id="btn-pause" onclick="loadScreen('home')">🛑 ESCI</button>
-    </div>
+        <div style="display: flex; flex-direction: column;">
+            <span id="score">Punti: 0</span>
+            <span id="speedometer" style="font-size: 20px; font-weight: bold; color: #00e5ff; text-shadow: 2px 2px 4px #000; margin-top: 5px;">0 km/h</span>
+        </div>
+        </div>
     <canvas id="gameCanvas" width="400" height="600"></canvas>
 </section>
