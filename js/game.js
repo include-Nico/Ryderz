@@ -1,91 +1,35 @@
-// --- VARIABILI GLOBALI DI GIOCO ---
-let canvas;
-let ctx;
-let frames = 0;
-let gameLoopId;
-let score = 0;
-let isGameOver = false;
-let isPaused = false; 
-let roadOffset = 0;
-let touchInitialized = false;
+// --- VARIABILI GLOBALI E AUDIO ---
+let canvas, ctx, frames = 0, gameLoopId, score = 0, isGameOver = false, isPaused = false, roadOffset = 0, touchInitialized = false;
 let currentGear = 1;
 
-// --- AUDIO DI GIOCO ---
 const engineSound = new Audio('audio/engine.mp3');
 engineSound.loop = true;
 engineSound.volume = 0.5;
 
 const shiftSound = new Audio('audio/shift.mp3');
-shiftSound.volume = 0.8;
-
 const crashSound = new Audio('audio/crash.mp3');
-crashSound.volume = 1.0;
 
 function initGame() {
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
+    frames = 0; score = 0; roadOffset = 0; currentGear = 1; isGameOver = false; isPaused = false;
     
-    frames = 0;
-    score = 0;
-    roadOffset = 0;
-    currentGear = 1;
-    isGameOver = false;
-    isPaused = false; 
-    
-    const scoreElement = document.getElementById('score');
-    if (scoreElement) scoreElement.innerText = `Punti: 0`;
-
-    const pauseMenu = document.getElementById('pause-menu');
-    if (pauseMenu) pauseMenu.style.display = 'none';
-
     resetPlayer();  
     resetTraffic(); 
-
-    if (!touchInitialized) {
-        setupTouchControls(); 
-        touchInitialized = true;
-    }
+    if (!touchInitialized) { setupTouchControls(); touchInitialized = true; }
     
-    // Fai partire il rumore del motore al minimo
+    // Avvio motore
     engineSound.playbackRate = 0.8;
-    engineSound.play().catch(e => console.log("Audio bloccato dal browser"));
-
+    engineSound.play().catch(e => {});
     startEngine();
-}
-
-function togglePause() {
-    if (isGameOver) return; 
-    
-    isPaused = !isPaused; 
-    const pauseMenu = document.getElementById('pause-menu');
-    
-    if (isPaused) {
-        if (pauseMenu) pauseMenu.style.display = 'flex';
-        player.dx = 0;
-        player.isAccelerating = false;
-        engineSound.pause(); // Metti in pausa il motore
-    } else {
-        if (pauseMenu) pauseMenu.style.display = 'none';
-        engineSound.play(); // Riprendi il motore
-        runGameLoop(); 
-    }
-}
-
-function quitGame() {
-    isGameOver = true;
-    isPaused = false;
-    stopEngine();
-    loadScreen('home'); 
 }
 
 function runGameLoop() {
     if (isGameOver || isPaused) return; 
-
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     updatePlayer();       
     increaseDifficulty(); 
-    
     drawRoad();           
     manageEnemies();      
     drawPlayer();         
@@ -102,97 +46,65 @@ function runGameLoop() {
 
     updateScore();        
 
-    // --- MODULA IL RUMORE DEL MOTORE ---
-    // Calcola una proporzione della velocità (da 0.8 quando sei fermo, fino a 2.5 al massimo)
+    // --- COLLEGAMENTO VELOCITÀ -> SUONO MOTORE ---
+    // Calcola il pitch in base alla velocità attuale rispetto alla massima
     let pitch = 0.8 + (player.speedZ / playerProfile.stats.maxSpeed) * 1.5;
-    // Applica il pitch al file audio per simulare i giri del motore!
     engineSound.playbackRate = Math.max(0.5, Math.min(pitch, 2.5));
 
     frames++;
     gameLoopId = requestAnimationFrame(runGameLoop);
 }
 
+function updateScoreDisplay() {
+    const scoreElement = document.getElementById('score');
+    if (scoreElement) scoreElement.innerText = `Punti: ${score}`;
+
+    let visualSpeed = Math.floor(player.speedZ * 10); 
+    const speedElement = document.getElementById('speedometer');
+    if (speedElement) speedElement.innerText = `${visualSpeed} km/h`;
+
+    // --- LOGICA CAMBIO MARCIA E SUONO ---
+    let newGear = 1;
+    if (visualSpeed > 100) newGear = 5;
+    else if (visualSpeed > 75) newGear = 4;
+    else if (visualSpeed > 50) newGear = 3;
+    else if (visualSpeed > 35) newGear = 2;
+
+    if (newGear > currentGear) {
+        shiftSound.currentTime = 0;
+        shiftSound.play().catch(e => {});
+    }
+    currentGear = newGear;
+    const gearElement = document.getElementById('gear-display');
+    if (gearElement) gearElement.innerText = `Marcia: ${currentGear}`;
+}
+
+function triggerGameOver() {
+    isGameOver = true;
+    engineSound.pause(); 
+    crashSound.play().catch(e => {}); // Suono incidente
+    stopEngine();
+    addBanknotes(Math.floor(score / 5)); 
+    window.lastScore = score; window.lastCash = Math.floor(score / 5);
+    setTimeout(() => { loadScreen('result'); }, 800);
+}
+
+// Funzioni di supporto (Pausa, Road, Engine) come nelle versioni precedenti
+function togglePause() {
+    isPaused = !isPaused;
+    if (isPaused) { engineSound.pause(); document.getElementById('pause-menu').style.display = 'flex'; }
+    else { engineSound.play(); document.getElementById('pause-menu').style.display = 'none'; runGameLoop(); }
+}
+function quitGame() { isGameOver = true; stopEngine(); loadScreen('home'); }
 function drawRoad() {
-    ctx.fillStyle = '#444'; 
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
+    ctx.fillStyle = '#444'; ctx.fillRect(0, 0, canvas.width, canvas.height);
     roadOffset = (roadOffset + player.speedZ) % 40; 
-    
     ctx.fillStyle = '#FFEB3B'; 
     for (let i = -40; i < canvas.height; i += 40) {
         ctx.fillRect(canvas.width / 2 - 3, i + roadOffset, 2, 20);
         ctx.fillRect(canvas.width / 2 + 1, i + roadOffset, 2, 20);
     }
-    
-    ctx.fillStyle = 'white';
-    for (let i = -40; i < canvas.height; i += 40) {
-        ctx.fillRect(canvas.width / 4 - 2, i + roadOffset, 4, 20); 
-        ctx.fillRect((canvas.width / 4) * 3 - 2, i + roadOffset, 4, 20); 
-    }
 }
-
-function updateScore() {
-    if (frames % 10 === 0) {
-        let basePoints = Math.floor(player.speedZ / 3);
-        score += isContromano() ? (basePoints * 2) : basePoints;
-        updateScoreDisplay();
-    }
-}
-
-function updateScoreDisplay() {
-    const scoreElement = document.getElementById('score');
-    if (scoreElement) scoreElement.innerText = `Punti: ${score}`;
-
-    const speedElement = document.getElementById('speedometer');
-    const gearElement = document.getElementById('gear-display');
-
-    if (speedElement && gearElement) {
-        let visualSpeed = Math.floor(player.speedZ * 10); 
-        speedElement.innerText = `${visualSpeed} km/h`;
-
-        // Calcolo della marcia
-        let newGear = 1;
-        if (visualSpeed > 100) newGear = 5;
-        else if (visualSpeed > 75) newGear = 4;
-        else if (visualSpeed > 50) newGear = 3;
-        else if (visualSpeed > 35) newGear = 2;
-
-        // SE LA MARCIA È CAMBIATA, RIPRODUCI IL SUONO DEL CAMBIO!
-        if (newGear > currentGear) {
-            shiftSound.currentTime = 0; // Fa ripartire il suono da zero istantaneamente
-            shiftSound.play().catch(e => {});
-        }
-        currentGear = newGear; // Aggiorna la marcia attuale in memoria
-
-        gearElement.innerText = `Marcia: ${currentGear}`;
-    }
-}
-
-function triggerGameOver() {
-    isGameOver = true;
-    
-    // Audio dello schianto
-    engineSound.pause(); 
-    crashSound.currentTime = 0;
-    crashSound.play().catch(e => {});
-
-    stopEngine();
-    
-    let cashEarned = Math.floor(score / 5); 
-    addBanknotes(cashEarned); 
-    
-    window.lastScore = score;
-    window.lastCash = cashEarned;
-    
-    setTimeout(() => {
-        loadScreen('result');
-    }, 800);
-}
-
+function updateScore() { if (frames % 10 === 0) { score += isContromano() ? (Math.floor(player.speedZ / 3) * 2) : Math.floor(player.speedZ / 3); updateScoreDisplay(); } }
 function startEngine() { runGameLoop(); }
-
-function stopEngine() {
-    cancelAnimationFrame(gameLoopId);
-    engineSound.pause(); // Per sicurezza spegne il motore quando si esce
-    if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height); 
-}
+function stopEngine() { cancelAnimationFrame(gameLoopId); engineSound.pause(); }
