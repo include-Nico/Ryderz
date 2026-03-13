@@ -5,6 +5,7 @@ let frames = 0;
 let gameLoopId;
 let score = 0;
 let isGameOver = false;
+let isPaused = false; // Nuova variabile per la pausa
 let roadOffset = 0;
 let touchInitialized = false;
 
@@ -16,9 +17,14 @@ function initGame() {
     score = 0;
     roadOffset = 0;
     isGameOver = false;
+    isPaused = false; 
     
     const scoreElement = document.getElementById('score');
     if (scoreElement) scoreElement.innerText = `Punti: 0`;
+
+    // Assicuriamoci che il menu di pausa sia invisibile quando inizia una nuova partita
+    const pauseMenu = document.getElementById('pause-menu');
+    if (pauseMenu) pauseMenu.style.display = 'none';
 
     resetPlayer();  
     resetTraffic(); 
@@ -31,8 +37,39 @@ function initGame() {
     startEngine();
 }
 
+// --- LOGICA DELLA PAUSA ---
+function togglePause() {
+    if (isGameOver) return; // Se sei già morto, non puoi mettere in pausa
+    
+    isPaused = !isPaused; // Inverte lo stato (da falso a vero, o da vero a falso)
+    const pauseMenu = document.getElementById('pause-menu');
+    
+    if (isPaused) {
+        // MOSTRA IL MENU PAUSA
+        if (pauseMenu) pauseMenu.style.display = 'flex';
+        
+        // Per sicurezza, azzeriamo gli input del giocatore così l'auto non sbanda alla ripresa
+        player.dx = 0;
+        player.isAccelerating = false;
+        
+    } else {
+        // NASCONDI IL MENU E RIPRENDI A GIOCARE
+        if (pauseMenu) pauseMenu.style.display = 'none';
+        runGameLoop(); // Fai ripartire il motore!
+    }
+}
+
+// --- ABBANDONO PARTITA ---
+function quitGame() {
+    isGameOver = true;
+    isPaused = false;
+    stopEngine();
+    loadScreen('home'); // Ritorna al menu usando la funzione in app.js
+}
+
+// --- LOOP PRINCIPALE ---
 function runGameLoop() {
-    if (isGameOver) return; 
+    if (isGameOver || isPaused) return; // Se è in pausa, il loop si "congela" qui!
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -123,6 +160,7 @@ function triggerGameOver() {
 }
 
 function startEngine() { runGameLoop(); }
+
 function stopEngine() {
     cancelAnimationFrame(gameLoopId);
     if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height); 
