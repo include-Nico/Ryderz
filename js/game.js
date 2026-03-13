@@ -104,28 +104,42 @@ function updateScore() {
     }
 }
 
+// ... (tutto il codice in alto di game.js rimane identico fino a updateScoreDisplay) ...
+
 function updateScoreDisplay() {
     const scoreElement = document.getElementById('score');
     if (scoreElement) scoreElement.innerText = `Punti: ${score}`;
+
+    // Aggiornamento Tachimetro visivo
+    const speedElement = document.getElementById('speedometer');
+    if (speedElement) {
+        // Calcola una velocità visiva (es. da 50 km/h a 240 km/h) proporzionata a speedZ
+        let visualSpeed = Math.floor((player.speedZ / playerProfile.stats.maxSpeed) * 240); 
+        if (visualSpeed < 50) visualSpeed = 50; // Velocità minima
+        speedElement.innerText = `${visualSpeed} km/h`;
+    }
 }
 
-/**
- * Gestisce la fine della partita in caso di incidente.
- */
+// --- GAME OVER MODIFICATO ---
 function triggerGameOver() {
     isGameOver = true;
     stopEngine();
     
+    // 1. Calcola le banconote guadagnate (es. 1 dollaro ogni 5 punti)
+    let cashEarned = Math.floor(score / 5); 
+    addBanknotes(cashEarned); // Salva nel garage
+    
+    // 2. Passa i valori in memoria per leggerli nella schermata dei risultati
+    window.lastScore = score;
+    window.lastCash = cashEarned;
+    
+    // 3. Carica la schermata dei risultati (con un leggero ritardo per far vedere lo schianto)
     setTimeout(() => {
-        alert(`💥 INCIDENTE! 💥\nHai totalizzato: ${score} punti.`);
-        loadScreen('home'); // Torna al menu principale (app.js)
-    }, 50);
+        loadScreen('result');
+    }, 800);
 }
 
-function startEngine() {
-    runGameLoop();
-}
-
+function startEngine() { runGameLoop(); }
 function stopEngine() {
     cancelAnimationFrame(gameLoopId);
     if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height); 
