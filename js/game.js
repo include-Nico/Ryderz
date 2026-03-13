@@ -8,9 +8,9 @@ let isGameOver = false;
 
 // Gestione traffico
 let enemies = [];
-let enemySpawnRate = 100; // Un nemico ogni 100 frame all'inizio
+let enemySpawnRate = 100; 
 const enemyColors = ['#2196F3', '#FFEB3B', '#4CAF50', '#9C27B0', '#FF9800'];
-let liscioEffects = []; // Per le scritte a schermo
+let liscioEffects = []; 
 
 // --- 1. L'AUTO DEL GIOCATORE ---
 const player = {
@@ -39,18 +39,16 @@ function initGame() {
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
     
-    // Reset variabili di gioco
-    player.x = canvas.width / 2 - player.width / 2;
+    player.x = canvas.width / 2 + 10; // Fai nascere l'auto nella corsia di destra (sicura)
     player.y = canvas.height - 100;
     player.dx = 0;
     frames = 0;
     score = 0;
     enemies = [];
     liscioEffects = [];
-    enemySpawnRate = 90; // Difficoltà iniziale
+    enemySpawnRate = 90; 
     isGameOver = false;
     
-    // Resetta il testo dello score
     document.getElementById('score').innerText = `Punti: 0`;
 
     if (!touchInitialized) {
@@ -78,7 +76,6 @@ function setupTouchControls() {
         const currentTouchX = e.touches[0].clientX;
         player.x += (currentTouchX - previousTouchX); 
         
-        // Bordi della strada
         if (player.x < 10) player.x = 10;
         if (player.x + player.width > canvas.width - 10) player.x = canvas.width - player.width - 10;
 
@@ -90,19 +87,18 @@ function setupTouchControls() {
 
 // --- 5. IL LOOP PRINCIPALE ---
 function runGameLoop() {
-    if (isGameOver) return; // Se hai perso, blocca tutto
+    if (isGameOver) return; 
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     drawRoad();
     updatePlayer();
-    manageEnemies(); // Gestisce il traffico, le collisioni e i lisci
+    manageEnemies(); 
     drawPlayer();
     updateScore();
 
     frames++;
 
-    // Aumenta la difficoltà progressivamente (i nemici spawnano più in fretta)
     if (frames % 600 === 0 && enemySpawnRate > 30) {
         enemySpawnRate -= 10;
     }
@@ -112,25 +108,22 @@ function runGameLoop() {
 
 // --- 6. MOTORE GRAFICO E FISICO ---
 function drawRoad() {
-    // Sfondo asfalto
     ctx.fillStyle = '#444'; 
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     ctx.fillStyle = 'white';
     let offset = frames % 40; 
     
-    // Linea centrale doppia (spartitraffico)
-    ctx.fillStyle = '#FFEB3B'; // Gialla
+    ctx.fillStyle = '#FFEB3B'; 
     for (let i = -40; i < canvas.height; i += 40) {
         ctx.fillRect(canvas.width / 2 - 4, i + offset, 2, 20);
         ctx.fillRect(canvas.width / 2 + 2, i + offset, 2, 20);
     }
     
-    // Linee tratteggiate bianche che dividono le corsie
     ctx.fillStyle = 'white';
     for (let i = -40; i < canvas.height; i += 40) {
-        ctx.fillRect(canvas.width / 4 - 2, i + offset, 4, 20); // Corsia di sx
-        ctx.fillRect((canvas.width / 4) * 3 - 2, i + offset, 4, 20); // Corsia di dx
+        ctx.fillRect(canvas.width / 4 - 2, i + offset, 4, 20); 
+        ctx.fillRect((canvas.width / 4) * 3 - 2, i + offset, 4, 20); 
     }
 }
 
@@ -140,71 +133,65 @@ function updatePlayer() {
     if (player.x + player.width > canvas.width - 10) player.x = canvas.width - player.width - 10;
 }
 
+// Funzione di supporto per capire se siamo contromano
+function isContromano() {
+    // Se il centro della nostra auto è a sinistra della striscia gialla centrale
+    return (player.x + player.width / 2) < (canvas.width / 2);
+}
+
 function manageEnemies() {
-    // 1. GENERAZIONE NEMICI
     if (frames % enemySpawnRate === 0) {
-        // Scegli a caso una delle 4 corsie (0 e 1 sono a sinistra, 2 e 3 a destra)
         const lane = Math.floor(Math.random() * 4);
         const laneWidth = canvas.width / 4;
         
-        // Centra il nemico nella sua corsia
         const ex = (lane * laneWidth) + (laneWidth / 2) - (40 / 2);
-        let espeed;
-
-        // Se è a sinistra (senso di marcia opposto) viene giù velocissimo
-        if (lane < 2) {
-            espeed = Math.random() * 4 + 8; // Velocità tra 8 e 12
-        } 
-        // Se è a destra (tuo senso di marcia) viene giù lentamente (lo superi)
-        else {
-            espeed = Math.random() * 2 + 2; // Velocità tra 2 e 4
-        }
+        let espeed = (lane < 2) ? (Math.random() * 4 + 8) : (Math.random() * 2 + 2);
 
         enemies.push({
             x: ex, y: -100, width: 40, height: 70, speed: espeed,
             color: enemyColors[Math.floor(Math.random() * enemyColors.length)],
-            passed: false // Serve a capire se lo hai già superato per dare il punteggio
+            passed: false 
         });
     }
 
-    // 2. MOVIMENTO E LOGICA NEMICI
     for (let i = enemies.length - 1; i >= 0; i--) {
         let e = enemies[i];
-        e.y += e.speed; // Muovi in basso
+        e.y += e.speed; 
 
-        // Disegna nemico
         ctx.fillStyle = e.color;
         ctx.fillRect(e.x, e.y, e.width, e.height);
-        // Parabrezza
         ctx.fillStyle = '#111';
         ctx.fillRect(e.x + 5, e.y + (e.speed > 5 ? 45 : 10), e.width - 10, 15); 
         ctx.fillRect(e.x + 5, e.y + (e.speed > 5 ? 10 : 45), e.width - 10, 15);
 
-        // --- COLLISIONE (Game Over) ---
+        // Collisione
         if (player.x < e.x + e.width && player.x + player.width > e.x &&
             player.y < e.y + e.height && player.y + player.height > e.y) {
             triggerGameOver();
         }
 
-        // --- CALCOLO "LISCIO" E PUNTI SORPASSO ---
+        // Calcolo sorpasso e liscio
         if (!e.passed && e.y > player.y + player.height) {
             e.passed = true;
-            score += 10; // Punti per aver superato un'auto
+            
+            // Moltiplicatore attivo se siamo contromano
+            let multiplier = isContromano() ? 2 : 1;
+            
+            score += 10 * multiplier; 
 
-            // Calcoliamo la distanza orizzontale dal centro delle auto
             const centerPlayer = player.x + player.width / 2;
             const centerEnemy = e.x + e.width / 2;
             const distance = Math.abs(centerPlayer - centerEnemy);
 
-            // Se la distanza è appena maggiore della collisione (circa 40px è botto, 41-65px è liscio)
             if (distance > 40 && distance < 65) {
-                score += 50; // Bonus liscio!
-                liscioEffects.push({ x: player.x, y: player.y, alpha: 1.0 }); // Fa apparire la scritta
+                let liscioPoints = 50 * multiplier;
+                score += liscioPoints; 
+                // Salviamo anche quanti punti abbiamo fatto per scriverlo a schermo
+                liscioEffects.push({ x: player.x, y: player.y, alpha: 1.0, points: liscioPoints }); 
             }
             updateScoreDisplay();
         }
 
-        // Elimina auto uscite dallo schermo per non appesantire il gioco
         if (e.y > canvas.height + 50) {
             enemies.splice(i, 1);
         }
@@ -221,21 +208,23 @@ function drawPlayer() {
     // Disegna scritte "LISCIO!" animate
     for (let i = liscioEffects.length - 1; i >= 0; i--) {
         let effect = liscioEffects[i];
-        ctx.fillStyle = `rgba(255, 215, 0, ${effect.alpha})`; // Oro trasparente
-        ctx.font = "bold 22px Arial";
-        ctx.fillText("LISCIO! +50", effect.x - 30, effect.y - 20);
         
-        effect.y -= 2; // Fa salire la scritta
-        effect.alpha -= 0.03; // Fa svanire la scritta
+        // Se i punti sono 100 (moltiplicati), facciamo la scritta rossa, altrimenti oro
+        ctx.fillStyle = effect.points >= 100 ? `rgba(255, 50, 50, ${effect.alpha})` : `rgba(255, 215, 0, ${effect.alpha})`; 
+        ctx.font = "bold 22px Arial";
+        ctx.fillText(`LISCIO! +${effect.points}`, effect.x - 30, effect.y - 20);
+        
+        effect.y -= 2; 
+        effect.alpha -= 0.03; 
         
         if (effect.alpha <= 0) liscioEffects.splice(i, 1);
     }
 }
 
 function updateScore() {
-    // Guadagni 1 punto costantemente ogni tot frame solo sopravvivendo
     if (frames % 10 === 0) {
-        score += 1;
+        // Se sei contromano prendi 2 punti di sopravvivenza, altrimenti 1
+        score += isContromano() ? 2 : 1;
         updateScoreDisplay();
     }
 }
@@ -250,7 +239,6 @@ function triggerGameOver() {
     isGameOver = true;
     stopEngine();
     
-    // Mostra l'alert e torna al menu dopo un millisecondo per far disegnare l'impatto a schermo
     setTimeout(() => {
         alert(`💥 INCIDENTE! 💥\nHai totalizzato: ${score} punti.\nRitenta, sarai più fortunato!`);
         loadScreen('home');
