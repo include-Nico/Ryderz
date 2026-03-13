@@ -14,7 +14,7 @@ function isTouchDevice() {
 async function loadScreen(screenName, clickedTab = null) {
     try {
         // 1. Va a pescare il file HTML (nella cartella 'screen')
-        const response = await fetch(`screen/${screenName}.html`);
+        const response = await fetch(`screens/${screenName}.html`);
         const html = await response.text();
         
         // 2. Lo inserisce nell'area dello schermo
