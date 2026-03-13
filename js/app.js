@@ -1,28 +1,22 @@
 // --- GESTIONE AUDIO MENU ---
 let menuMusic = new Audio('audio/menu.mp3');
 menuMusic.loop = true;
-menuMusic.volume = 0.4; // Volume al 40% per non assordare
+menuMusic.volume = 0.4; 
 
-// Carica la Home all'avvio dell'app
 window.onload = () => {
     loadScreen('home');
 };
 
-// Rileva se stiamo usando uno smartphone
 function isTouchDevice() {
-    return (('ontouchstart' in window) ||
-       (navigator.maxTouchPoints > 0) ||
-       (navigator.msMaxTouchPoints > 0));
+    return (('ontouchstart' in window) || (navigator.maxTouchPoints > 0));
 }
 
-// Carica le varie sezioni HTML
 async function loadScreen(screenName, clickedTab = null) {
     try {
         const response = await fetch(`screens/${screenName}.html`);
         const html = await response.text();
         document.getElementById('screens-area').innerHTML = html;
 
-        // --- AGGIORNAMENTO SOLDI NEL MENU ---
         if (screenName === 'home') {
             const moneyEl = document.getElementById('home-banknotes');
             if (moneyEl) moneyEl.innerText = playerProfile.banknotes;
@@ -34,13 +28,11 @@ async function loadScreen(screenName, clickedTab = null) {
             }
         }
 
-        // --- STAMPA I DATI SULLA SCHERMATA DEI RISULTATI ---
         if (screenName === 'result') {
             document.getElementById('result-score').innerText = window.lastScore || 0;
             document.getElementById('result-cash').innerText = window.lastCash || 0;
         }
 
-        // Gestione bottoni in basso
         if (clickedTab) {
             document.querySelectorAll('.tab-btn').forEach(tab => tab.classList.remove('active'));
             clickedTab.classList.add('active');
@@ -48,21 +40,16 @@ async function loadScreen(screenName, clickedTab = null) {
 
         const tabs = document.getElementById('bottom-tabs');
         
-        // --- LOGICA AUDIO E SCHERMATE ---
+        // --- LOGICA AUDIO: Stop musica menu se si gioca ---
         if (screenName === 'game' || screenName === 'result') {
             tabs.style.display = 'none';
-            menuMusic.pause(); // Ferma la musica del menu
-            
-            if (screenName === 'game') {
-                initGame(); 
-            }
+            menuMusic.pause(); 
+            if (screenName === 'game') initGame(); 
         } else {
             tabs.style.display = 'flex';
             if (typeof stopEngine === "function") stopEngine(); 
-            
-            // Fai partire la musica del menu (il catch evita errori se il browser blocca l'autoplay iniziale)
-            menuMusic.play().catch(e => console.log("In attesa del primo click dell'utente per l'audio..."));
+            // La musica riparte al primo click dell'utente
+            menuMusic.play().catch(e => console.log("Audio in attesa di interazione"));
         }
-
     } catch (error) { console.error("Errore:", error); }
 }
