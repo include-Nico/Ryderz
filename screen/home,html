@@ -1,0 +1,4 @@
+<section id="screen-home" class="screen active">
+    <h1>TRAFFIC RACER</h1>
+    <button class="play-btn" onclick="loadScreen('game')">🏁 GIOCA ORA</button>
+</section>
