@@ -31,7 +31,6 @@ function initGame() {
     startEngine();
 }
 
-// --- LOOP PRINCIPALE ---
 function runGameLoop() {
     if (isGameOver) return; 
 
@@ -45,7 +44,6 @@ function runGameLoop() {
     drawPlayer();         
     drawLiscioEffects();  
     
-    // --- AVVISO CONTROMANO (PUNTI X2) ---
     if (isContromano()) {
         let alpha = 0.7 + Math.sin(frames * 0.1) * 0.3;
         ctx.fillStyle = `rgba(255, 50, 50, ${alpha})`;
@@ -83,7 +81,6 @@ function drawRoad() {
 function updateScore() {
     if (frames % 10 === 0) {
         let basePoints = Math.floor(player.speedZ / 3);
-        // Raddoppia i punti se sei a sinistra
         score += isContromano() ? (basePoints * 2) : basePoints;
         updateScoreDisplay();
     }
@@ -125,10 +122,7 @@ function triggerGameOver() {
     }, 800);
 }
 
-function startEngine() {
-    runGameLoop();
-}
-
+function startEngine() { runGameLoop(); }
 function stopEngine() {
     cancelAnimationFrame(gameLoopId);
     if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height); 
