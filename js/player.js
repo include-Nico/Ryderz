@@ -30,7 +30,9 @@ function resetPlayer() {
 
 // --- COMANDI DA TASTIERA (PC) ---
 document.addEventListener('keydown', (e) => {
-    if (isGameOver) return;
+    // Blocca i comandi se il gioco è finito o in pausa
+    if (isGameOver || (typeof isPaused !== 'undefined' && isPaused)) return;
+    
     const key = e.key.toLowerCase();
     
     if (key === 'a' || key === 'arrowleft') player.dx = -player.speedX;
@@ -56,14 +58,14 @@ function setupTouchControls() {
     let previousTouchX = 0;
 
     canvas.addEventListener('touchstart', (e) => {
-        if (isGameOver) return;
+        if (isGameOver || (typeof isPaused !== 'undefined' && isPaused)) return;
         isDragging = true;
         player.isAccelerating = true; 
         previousTouchX = e.touches[0].clientX;
     }, { passive: false });
 
     canvas.addEventListener('touchmove', (e) => {
-        if (!isDragging || isGameOver) return;
+        if (!isDragging || isGameOver || (typeof isPaused !== 'undefined' && isPaused)) return;
         e.preventDefault(); 
         const currentTouchX = e.touches[0].clientX;
         player.x += (currentTouchX - previousTouchX); 
