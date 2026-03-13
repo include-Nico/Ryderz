@@ -1,13 +1,36 @@
 <section id="screen-home" class="screen active">
-    <div style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.7); padding: 10px 15px; border-radius: 20px; font-size: 20px; font-weight: bold; color: #4CAF50; border: 1px solid #4CAF50;">
+
+    <div class="home-money-badge">
         💵 <span id="home-banknotes">0</span>
     </div>
 
-    <h1>RYDERZ</h1>
-    
-    <div style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
-        <p id="instructions-text" style="margin: 5px 0;">Caricamento istruzioni...</p>
+    <!-- Decorative grid lines behind logo -->
+    <svg class="home-bg-deco" aria-hidden="true" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice"
+         style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:400px;opacity:0.06;pointer-events:none;">
+        <defs>
+            <linearGradient id="hg" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#FF6A00"/>
+                <stop offset="100%" stop-color="transparent"/>
+            </linearGradient>
+        </defs>
+        <!-- Prospettive stradali -->
+        <line x1="200" y1="0"   x2="0"   y2="200" stroke="url(#hg)" stroke-width="1"/>
+        <line x1="200" y1="0"   x2="100" y2="200" stroke="url(#hg)" stroke-width="1"/>
+        <line x1="200" y1="0"   x2="200" y2="200" stroke="url(#hg)" stroke-width="1"/>
+        <line x1="200" y1="0"   x2="300" y2="200" stroke="url(#hg)" stroke-width="1"/>
+        <line x1="200" y1="0"   x2="400" y2="200" stroke="url(#hg)" stroke-width="1"/>
+        <line x1="0"   y1="100" x2="400" y2="100" stroke="url(#hg)" stroke-width="0.5"/>
+        <line x1="0"   y1="150" x2="400" y2="150" stroke="url(#hg)" stroke-width="0.5"/>
+        <line x1="0"   y1="180" x2="400" y2="180" stroke="url(#hg)" stroke-width="0.5"/>
+    </svg>
+
+    <h1 class="home-logo">RYDERZ</h1>
+    <p class="home-tagline">Street Racing</p>
+
+    <div class="instructions-card">
+        <p id="instructions-text" style="margin:0;">Caricamento istruzioni…</p>
     </div>
 
-    <button class="play-btn" onclick="loadScreen('game')">🏁 GIOCA ORA</button>
+    <button class="play-btn" onclick="loadScreen('game')">▶ &nbsp;GIOCA ORA</button>
+
 </section>
