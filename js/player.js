@@ -19,7 +19,7 @@ function resetPlayer() {
     player.y = canvas.height - 120;
     player.dx = 0;
     player.isAccelerating = false;
-    player.hasAcceleratedOnce = false; // Reset a inizio partita
+    player.hasAcceleratedOnce = false; 
     
     // Legge le statistiche dal garage
     player.speedX = playerProfile.stats.handling;
@@ -87,7 +87,7 @@ function updatePlayer() {
     if (player.x + player.width > canvas.width - 10) player.x = canvas.width - player.width - 10;
 
     if (player.isAccelerating) {
-        player.hasAcceleratedOnce = true; // Hai premuto il gas!
+        player.hasAcceleratedOnce = true; 
         player.speedZ += player.accelRate; 
         if (player.speedZ > player.maxSpeedZ) player.speedZ = player.maxSpeedZ;
     } else {
