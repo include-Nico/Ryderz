@@ -1,4 +1,4 @@
-// --- VARIABILI DEL TRAFFICO ---
+// --- VARIABILI DEL TRAFFICO --
 let enemies = [];
 let enemySpawnRate = 80; 
 const enemyColors = ['#2196F3', '#FFEB3B', '#4CAF50', '#9C27B0', '#FF9800'];
