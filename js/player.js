@@ -61,16 +61,18 @@ function setupTouchControls() {
 }
 
 // Fisica
+// Fisica e Movimento
 function updatePlayer() {
     player.x += player.dx;
     if (player.x < 10) player.x = 10;
     if (player.x + player.width > canvas.width - 10) player.x = canvas.width - player.width - 10;
 
     if (player.isAccelerating) {
-        player.speedZ += player.accelRate; // Usa l'accelerazione del garage!
+        player.speedZ += player.accelRate; // Ora è 0.05 dal garage
         if (player.speedZ > player.maxSpeedZ) player.speedZ = player.maxSpeedZ;
     } else {
-        player.speedZ -= 0.4; 
+        // La decelerazione deve essere bilanciata con la nuova accelerazione
+        player.speedZ -= 0.1; // Prima era 0.4
         if (player.speedZ < player.minSpeedZ) player.speedZ = player.minSpeedZ;
     }
 }
