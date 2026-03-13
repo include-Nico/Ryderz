@@ -1,4 +1,4 @@
-// --- L'AUTO DEL GIOCATORE ---
+// --- L'AUTO DEL GIOCATORE --
 const player = {
     x: 0, 
     y: 0, 
