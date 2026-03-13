@@ -1,3 +1,8 @@
+// --- GESTIONE AUDIO MENU ---
+let menuMusic = new Audio('audio/menu.mp3');
+menuMusic.loop = true;
+menuMusic.volume = 0.4; // Volume al 40% per non assordare
+
 // Carica la Home all'avvio dell'app
 window.onload = () => {
     loadScreen('home');
@@ -35,23 +40,28 @@ async function loadScreen(screenName, clickedTab = null) {
             document.getElementById('result-cash').innerText = window.lastCash || 0;
         }
 
+        // Gestione bottoni in basso
         if (clickedTab) {
             document.querySelectorAll('.tab-btn').forEach(tab => tab.classList.remove('active'));
             clickedTab.classList.add('active');
         }
 
         const tabs = document.getElementById('bottom-tabs');
-        if (screenName === 'game') {
+        
+        // --- LOGICA AUDIO E SCHERMATE ---
+        if (screenName === 'game' || screenName === 'result') {
             tabs.style.display = 'none';
-            initGame(); 
-        } else {
-            // Mostriamo i tab ovunque, TRANNE che nel gioco e nei risultati post-incidente
-            if (screenName === 'result') {
-                tabs.style.display = 'none';
-            } else {
-                tabs.style.display = 'flex';
+            menuMusic.pause(); // Ferma la musica del menu
+            
+            if (screenName === 'game') {
+                initGame(); 
             }
+        } else {
+            tabs.style.display = 'flex';
             if (typeof stopEngine === "function") stopEngine(); 
+            
+            // Fai partire la musica del menu (il catch evita errori se il browser blocca l'autoplay iniziale)
+            menuMusic.play().catch(e => console.log("In attesa del primo click dell'utente per l'audio..."));
         }
 
     } catch (error) { console.error("Errore:", error); }
