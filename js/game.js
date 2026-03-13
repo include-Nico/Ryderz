@@ -5,9 +5,21 @@ let frames = 0;
 let gameLoopId;
 let score = 0;
 let isGameOver = false;
-let isPaused = false; // Nuova variabile per la pausa
+let isPaused = false; 
 let roadOffset = 0;
 let touchInitialized = false;
+let currentGear = 1;
+
+// --- AUDIO DI GIOCO ---
+const engineSound = new Audio('audio/engine.mp3');
+engineSound.loop = true;
+engineSound.volume = 0.5;
+
+const shiftSound = new Audio('audio/shift.mp3');
+shiftSound.volume = 0.8;
+
+const crashSound = new Audio('audio/crash.mp3');
+crashSound.volume = 1.0;
 
 function initGame() {
     canvas = document.getElementById('gameCanvas');
@@ -16,13 +28,13 @@ function initGame() {
     frames = 0;
     score = 0;
     roadOffset = 0;
+    currentGear = 1;
     isGameOver = false;
     isPaused = false; 
     
     const scoreElement = document.getElementById('score');
     if (scoreElement) scoreElement.innerText = `Punti: 0`;
 
-    // Assicuriamoci che il menu di pausa sia invisibile quando inizia una nuova partita
     const pauseMenu = document.getElementById('pause-menu');
     if (pauseMenu) pauseMenu.style.display = 'none';
 
@@ -34,42 +46,40 @@ function initGame() {
         touchInitialized = true;
     }
     
+    // Fai partire il rumore del motore al minimo
+    engineSound.playbackRate = 0.8;
+    engineSound.play().catch(e => console.log("Audio bloccato dal browser"));
+
     startEngine();
 }
 
-// --- LOGICA DELLA PAUSA ---
 function togglePause() {
-    if (isGameOver) return; // Se sei già morto, non puoi mettere in pausa
+    if (isGameOver) return; 
     
-    isPaused = !isPaused; // Inverte lo stato (da falso a vero, o da vero a falso)
+    isPaused = !isPaused; 
     const pauseMenu = document.getElementById('pause-menu');
     
     if (isPaused) {
-        // MOSTRA IL MENU PAUSA
         if (pauseMenu) pauseMenu.style.display = 'flex';
-        
-        // Per sicurezza, azzeriamo gli input del giocatore così l'auto non sbanda alla ripresa
         player.dx = 0;
         player.isAccelerating = false;
-        
+        engineSound.pause(); // Metti in pausa il motore
     } else {
-        // NASCONDI IL MENU E RIPRENDI A GIOCARE
         if (pauseMenu) pauseMenu.style.display = 'none';
-        runGameLoop(); // Fai ripartire il motore!
+        engineSound.play(); // Riprendi il motore
+        runGameLoop(); 
     }
 }
 
-// --- ABBANDONO PARTITA ---
 function quitGame() {
     isGameOver = true;
     isPaused = false;
     stopEngine();
-    loadScreen('home'); // Ritorna al menu usando la funzione in app.js
+    loadScreen('home'); 
 }
 
-// --- LOOP PRINCIPALE ---
 function runGameLoop() {
-    if (isGameOver || isPaused) return; // Se è in pausa, il loop si "congela" qui!
+    if (isGameOver || isPaused) return; 
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -91,6 +101,12 @@ function runGameLoop() {
     }
 
     updateScore();        
+
+    // --- MODULA IL RUMORE DEL MOTORE ---
+    // Calcola una proporzione della velocità (da 0.8 quando sei fermo, fino a 2.5 al massimo)
+    let pitch = 0.8 + (player.speedZ / playerProfile.stats.maxSpeed) * 1.5;
+    // Applica il pitch al file audio per simulare i giri del motore!
+    engineSound.playbackRate = Math.max(0.5, Math.min(pitch, 2.5));
 
     frames++;
     gameLoopId = requestAnimationFrame(runGameLoop);
@@ -134,18 +150,32 @@ function updateScoreDisplay() {
         let visualSpeed = Math.floor(player.speedZ * 10); 
         speedElement.innerText = `${visualSpeed} km/h`;
 
-        let gear = 1;
-        if (visualSpeed > 100) gear = 5;
-        else if (visualSpeed > 75) gear = 4;
-        else if (visualSpeed > 50) gear = 3;
-        else if (visualSpeed > 35) gear = 2;
+        // Calcolo della marcia
+        let newGear = 1;
+        if (visualSpeed > 100) newGear = 5;
+        else if (visualSpeed > 75) newGear = 4;
+        else if (visualSpeed > 50) newGear = 3;
+        else if (visualSpeed > 35) newGear = 2;
 
-        gearElement.innerText = `Marcia: ${gear}`;
+        // SE LA MARCIA È CAMBIATA, RIPRODUCI IL SUONO DEL CAMBIO!
+        if (newGear > currentGear) {
+            shiftSound.currentTime = 0; // Fa ripartire il suono da zero istantaneamente
+            shiftSound.play().catch(e => {});
+        }
+        currentGear = newGear; // Aggiorna la marcia attuale in memoria
+
+        gearElement.innerText = `Marcia: ${currentGear}`;
     }
 }
 
 function triggerGameOver() {
     isGameOver = true;
+    
+    // Audio dello schianto
+    engineSound.pause(); 
+    crashSound.currentTime = 0;
+    crashSound.play().catch(e => {});
+
     stopEngine();
     
     let cashEarned = Math.floor(score / 5); 
@@ -163,5 +193,6 @@ function startEngine() { runGameLoop(); }
 
 function stopEngine() {
     cancelAnimationFrame(gameLoopId);
+    engineSound.pause(); // Per sicurezza spegne il motore quando si esce
     if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height); 
 }
