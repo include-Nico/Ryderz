@@ -1,5 +1,5 @@
 // --- VARIABILI GLOBALI E AUDIO ---
-let canvas, ctx, frames = 0, gameLoopId, score = 0, isGameOver = false, isPaused = false, roadOffset = 0, touchInitialized = false;
+let canvas, ctx, frames = 0, gameLoopId, score = 0, isGameOver = false, isPaused = false, roadOffset = 0;
 let currentGear = 1;
 
 const engineSound = new Audio('audio/engine.mp3');
@@ -16,7 +16,9 @@ function initGame() {
     
     resetPlayer();  
     resetTraffic(); 
-    if (!touchInitialized) { setupTouchControls(); touchInitialized = true; }
+    
+    // FIX TOUCH: Colleghiamo gli eventi touch ad ogni avvio partita perché il canvas viene ricreato
+    setupTouchControls(); 
     
     // Avvio motore
     engineSound.playbackRate = 0.8;
@@ -72,7 +74,7 @@ function updateScoreDisplay() {
 
     // Se la marcia è DIVERSA dalla precedente (su o giù), suona!
     if (newGear !== currentGear) {
-        shiftSound.currentTime = 0; // Riparte da zero per garantire il suono anche in successione rapida
+        shiftSound.currentTime = 0; 
         shiftSound.play().catch(e => {});
         
         // Simula il calo di giri togliendo il gas per un istante
