@@ -29,10 +29,8 @@ function manageEnemies() {
         const absSpeed = isOncoming ? (Math.random() * 4 + 6) : (Math.random() * 3 + 4); 
         const relSpeed = isOncoming ? (player.speedZ + absSpeed) : (player.speedZ - absSpeed);
         
-        // Blocca auto da dietro all'inizio del gioco
-        if (!player.hasAcceleratedOnce && relSpeed < 0) {
-            return;
-        }
+        // Blocca auto da dietro se non hai ancora iniziato ad accelerare
+        if (!player.hasAcceleratedOnce && relSpeed < 0) return;
 
         const ey = relSpeed > 0 ? -100 : canvas.height + 150;
 
@@ -53,50 +51,53 @@ function manageEnemies() {
     for (let i = enemies.length - 1; i >= 0; i--) {
         let e = enemies[i];
         
-        // --- EVITAMENTO INCIDENTI TRA NEMICI ---
-        // Controlla tutte le altre auto in strada
+        // --- EVITAMENTO INCIDENTI CON ALTRI NEMICI ---
         for (let j = 0; j < enemies.length; j++) {
             if (i === j) continue;
             let other = enemies[j];
-            
-            // Se sono nella stessa corsia e direzione e non stanno cambiando corsia
             if (e.lane === other.lane && e.isOncoming === other.isOncoming && !e.isChanging && !other.isChanging) {
                 if (!e.isOncoming) {
-                    // Auto nello stesso senso: 'e' è dietro a 'other' se la sua Y è maggiore
                     let distance = e.y - (other.y + other.height);
-                    if (distance > 0 && distance < 100 && e.absSpeed > other.absSpeed) {
-                        e.absSpeed = other.absSpeed; // Rallenta alla velocità dell'auto davanti!
+                    if (distance > 0 && distance < 110 && e.absSpeed > other.absSpeed) {
+                        e.absSpeed = other.absSpeed; 
                     }
                 } else {
-                    // Auto contromano: 'e' è dietro a 'other' se la sua Y è minore
                     let distance = other.y - (e.y + e.height);
-                    if (distance > 0 && distance < 100 && e.absSpeed > other.absSpeed) {
-                        e.absSpeed = other.absSpeed; // Rallenta!
+                    if (distance > 0 && distance < 110 && e.absSpeed > other.absSpeed) {
+                        e.absSpeed = other.absSpeed;
                     }
                 }
             }
         }
 
-        // Calcola movimento a schermo
+        // --- EVITAMENTO INCIDENTI CON IL GIOCATORE (NOVITÀ) ---
+        if (!e.isOncoming && !e.isChanging) {
+            // Se l'auto è nella nostra stessa corsia (X simile)
+            if (Math.abs((e.x + e.width/2) - (player.x + player.width/2)) < 35) {
+                // Se l'auto è dietro di noi (Y > player.Y) e ci sta raggiungendo
+                let distanceToPlayer = e.y - (player.y + player.height);
+                if (distanceToPlayer > 0 && distanceToPlayer < 120 && e.absSpeed > player.speedZ) {
+                    e.absSpeed = player.speedZ; // Rallenta per non tamponare il giocatore!
+                }
+            }
+        }
+
         let relSpeed = e.isOncoming ? (player.speedZ + e.absSpeed) : (player.speedZ - e.absSpeed);
         e.y += relSpeed; 
 
-        // --- LOGICA CAMBIO CORSIA INTELLIGENTE ---
+        // --- CAMBIO CORSIA INTELLIGENTE ---
         if (!e.isChanging && !e.isOncoming && Math.random() < 0.005) {
             let nextLane = e.lane + (Math.random() < 0.5 ? -1 : 1);
             if (nextLane >= 2 && nextLane <= 3) {
-                
-                // Controlla che la corsia di destinazione sia libera prima di girare
                 let canChange = true;
                 for (let j = 0; j < enemies.length; j++) {
                     if (i === j) continue;
                     let other = enemies[j];
-                    if (other.lane === nextLane && Math.abs(e.y - other.y) < 120) {
-                        canChange = false; // Spazio occupato, non gira
+                    if (other.lane === nextLane && Math.abs(e.y - other.y) < 130) {
+                        canChange = false;
                         break;
                     }
                 }
-
                 if (canChange) {
                     e.isChanging = true;
                     e.targetX = (nextLane * (canvas.width / 4)) + (canvas.width / 8) - 20;
@@ -108,9 +109,8 @@ function manageEnemies() {
         }
 
         if (e.isChanging) {
-            if (e.indicatorTimer > 0) {
-                e.indicatorTimer--; 
-            } else {
+            if (e.indicatorTimer > 0) e.indicatorTimer--; 
+            else {
                 let diff = e.targetX - e.x;
                 e.x += diff * 0.08; 
                 if (Math.abs(diff) < 2) {
@@ -125,9 +125,8 @@ function manageEnemies() {
         ctx.fillStyle = e.color;
         ctx.fillRect(e.x, e.y, e.width, e.height);
         
-        // Freccia Arancione Lampeggiante molto visibile
         if (e.indicator && !e.isBastard && Math.floor(frames / 8) % 2 === 0) {
-            ctx.fillStyle = '#FF9800'; 
+            ctx.fillStyle = '#FF9800'; // Arancione freccia
             let fx = e.indicator === 'left' ? e.x - 2 : e.x + e.width - 6;
             ctx.fillRect(fx, e.y + (e.isOncoming ? 0 : e.height - 8), 8, 8);
         }
@@ -136,22 +135,18 @@ function manageEnemies() {
         ctx.fillRect(e.x + 5, e.y + (e.isOncoming ? 45 : 10), e.width - 10, 15); 
         ctx.fillRect(e.x + 5, e.y + (e.isOncoming ? 10 : 45), e.width - 10, 15);
 
-        // --- COLLISIONE (Game Over) ---
         if (player.x < e.x + e.width && player.x + player.width > e.x &&
             player.y < e.y + e.height && player.y + player.height > e.y) {
             triggerGameOver(); 
         }
 
-        // --- SORPASSO E LISCIO ---
         if (!e.passed && relSpeed > 0 && e.y > player.y + player.height) {
             e.passed = true;
             let multiplier = isContromano() ? 2 : 1;
             score += 10 * multiplier; 
-
             const centerPlayer = player.x + player.width / 2;
             const centerEnemy = e.x + e.width / 2;
             const distance = Math.abs(centerPlayer - centerEnemy);
-
             if (distance > 40 && distance < 65) {
                 let liscioPoints = 50 * multiplier;
                 score += liscioPoints; 
@@ -172,14 +167,11 @@ function manageEnemies() {
 function drawLiscioEffects() {
     for (let i = liscioEffects.length - 1; i >= 0; i--) {
         let effect = liscioEffects[i];
-        
         ctx.fillStyle = effect.points >= 100 ? `rgba(255, 50, 50, ${effect.alpha})` : `rgba(255, 215, 0, ${effect.alpha})`; 
         ctx.font = "bold 22px Arial";
         ctx.fillText(`LISCIO! +${effect.points}`, effect.x - 30, effect.y - 20);
-        
         effect.y -= 2; 
         effect.alpha -= 0.03; 
-        
         if (effect.alpha <= 0) liscioEffects.splice(i, 1);
     }
 }
