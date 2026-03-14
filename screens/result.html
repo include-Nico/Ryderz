@@ -1,25 +1,16 @@
-<section id="screen-result" class="screen active"
-         style="background: radial-gradient(ellipse at 50% 20%,
-                    rgba(255,32,87,0.12) 0%, transparent 60%),
-                var(--bg-void);">
-
-    <h1 class="result-crash-title">💥 INCIDENTE 💥</h1>
-
-    <div class="result-card">
-        <p class="result-label">Punteggio finale</p>
-        <p class="result-score-value"><span id="result-score">0</span></p>
-
-        <hr class="result-divider">
-
-        <p class="result-label">Guadagno</p>
-        <p class="result-cash-value">💵 +<span id="result-cash">0</span></p>
+<section id="screen-result" class="screen active">
+    <h2 style="font-family: 'Orbitron'; font-size: 40px; color: var(--neon-orange); margin-bottom: 30px;">CRASH!</h2>
+    
+    <div style="background: var(--bg-card); border: 1px solid var(--border-dim); padding: 30px; border-radius: 15px; text-align: center; width: 80%; margin-bottom: 40px;">
+        <p style="color: var(--text-muted); letter-spacing: 2px;">PUNTEGGIO</p>
+        <h3 id="result-score" style="font-family: 'Orbitron'; font-size: 32px; color: #FFF; margin-bottom: 20px;">0</h3>
+        
+        <div style="height: 1px; background: var(--border-dim); margin-bottom: 20px;"></div>
+        
+        <p style="color: var(--text-muted); letter-spacing: 2px;">GUADAGNO</p>
+        <h3 id="result-cash" style="font-family: 'Orbitron'; font-size: 32px; color: #00E676;">💵 0</h3>
     </div>
 
-    <button class="play-btn" onclick="loadScreen('home')" style="margin-bottom: 14px;">
-         MENU PRINCIPALE
-    </button>
-    <button class="play-btn success" onclick="loadScreen('game')" style="font-size:13px;">
-        🔄 RIPROVA
-    </button>
-
+    <button class="play-btn" onclick="loadScreen('game')" style="margin-bottom: 15px; width: 250px;">CORRI ANCORA</button>
+    <button class="play-btn secondary" onclick="loadScreen('home')" style="width: 250px;">MENU PRINCIPALE</button>
 </section>
