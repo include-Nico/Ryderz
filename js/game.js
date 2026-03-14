@@ -5,7 +5,7 @@ let canvas, ctx, frames = 0, gameLoopId, score = 0, isGameOver = false, isPaused
 const ignitionSound = new Audio('audio/ignition.mp3');
 ignitionSound.volume = 1.0;
 
-const engineSound = new Audio('audio/engine.wav'); // Consigliato .wav o .ogg per loop
+const engineSound = new Audio('audio/engine.wav'); 
 engineSound.loop = true;
 engineSound.volume = 0.5;
 engineSound.preservesPitch = false; 
@@ -118,10 +118,11 @@ function drawRoad() {
     }
 }
 
-// Altre funzioni rimangono identiche (updateScore, triggerGameOver, etc.)
 function updateScore() {
-    if (frames % 10 === 0 && !player.isStarting && !player.isIgniting && player.speedZ >= 3) {
+    // Inizia a contare i punti fin dai 10 km/h (speedZ >= 1)
+    if (frames % 10 === 0 && !player.isStarting && !player.isIgniting && player.speedZ >= 1) {
         let basePoints = Math.floor(player.speedZ / 3);
+        if (basePoints < 1) basePoints = 1; // Assicura almeno 1 punto anche a bassa velocità
         score += isContromano() ? (basePoints * 2) : basePoints;
         updateScoreDisplay();
     }
