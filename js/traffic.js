@@ -1,37 +1,66 @@
 let enemies = [];
 const enemyImagesSrc = ['img/cars/enemy_01.png', 'img/cars/enemy_02.png'];
-let enemySprites = enemyImagesSrc.map(s => { let i = new Image(); i.src = s; return i; });
+let enemySprites = enemyImagesSrc.map(s => {
+    let img = new Image();
+    img.src = s;
+    return img;
+});
 
-function resetTraffic() { enemies = []; }
+function resetTraffic() {
+    enemies = [];
+}
 
 function manageEnemies() {
-    if (frames % 80 === 0 && !player.isStarting) {
-        let lane = Math.floor(Math.random() * 4);
+    // 'frames' è dichiarata in game.js, visibile globalmente
+    if (frames % 80 === 0 && !window.player.isStarting) {
+        // 4 corsie nella larghezza del canvas (400px)
+        const laneCount = 4;
+        const laneW     = canvas.width / laneCount;
+        const lane      = Math.floor(Math.random() * laneCount);
         enemies.push({
-            x: lane * (canvas.width/4) + 10,
-            y: -100,
-            width: 40, height: 70,
-            speed: Math.random() * 3 + 5,
+            x:      lane * laneW + (laneW / 2) - 20,
+            y:      -100,
+            width:  40,
+            height: 70,
+            speed:  Math.random() * 3 + 5,
             sprite: enemySprites[Math.floor(Math.random() * enemySprites.length)]
         });
     }
 
     for (let i = enemies.length - 1; i >= 0; i--) {
-        let e = enemies[i];
-        e.y += (player.speedZ > 0) ? (e.speed - player.speedZ) : e.speed;
-        
-        // Disegno
-        if(e.sprite.complete) ctx.drawImage(e.sprite, e.x-8, e.y-14, 56, 98);
-        else { ctx.fillStyle='blue'; ctx.fillRect(e.x, e.y, e.width, e.height); }
+        const e = enemies[i];
 
-        // Collisione
-        if (player.x < e.x + e.width && player.x + player.width > e.x &&
-            player.y < e.y + e.height && player.y + player.height > e.y) {
-            triggerGameOver();
+        // Muovi nemico: se il player va veloce i nemici sembrano rallentare
+        e.y += (window.player.speedZ > 0)
+            ? (e.speed - window.player.speedZ * 0.6)
+            : e.speed;
+
+        // Disegno
+        if (e.sprite.complete && e.sprite.naturalWidth > 0) {
+            ctx.drawImage(e.sprite, e.x - 8, e.y - 14, 56, 98);
+        } else {
+            ctx.fillStyle = '#1E90FF';
+            ctx.beginPath();
+            ctx.roundRect(e.x, e.y, e.width, e.height, 6);
+            ctx.fill();
         }
 
-        if (e.y > canvas.height + 100 || e.y < -200) enemies.splice(i, 1);
+        // Collisione AABB con piccolo margine di tolleranza
+        const margin = 8;
+        const p = window.player;
+        if (
+            p.x + margin         < e.x + e.width  &&
+            p.x + p.width - margin > e.x           &&
+            p.y + margin         < e.y + e.height  &&
+            p.y + p.height - margin > e.y
+        ) {
+            triggerGameOver();
+            return;
+        }
+
+        // Rimuovi se fuori schermo
+        if (e.y > canvas.height + 150 || e.y < -300) {
+            enemies.splice(i, 1);
+        }
     }
 }
-
-function drawLiscioEffects() {}
