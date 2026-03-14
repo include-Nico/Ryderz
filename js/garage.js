@@ -38,6 +38,11 @@ function saveProfile() {
     localStorage.setItem('ryderzProfileV4', JSON.stringify(window.playerProfile));
 }
 
+function addBanknotes(amount) {
+    window.playerProfile.banknotes += amount;
+    saveProfile();
+}
+
 let currentViewIndex = 0;
 const BASE_UPGRADE_COST = 1000;
 const MAX_LEVEL = 5;
@@ -75,7 +80,6 @@ function updateGarageUI() {
     document.getElementById('g-car-name').innerText = car.name;
     document.getElementById('home-banknotes').innerText = profile.banknotes;
 
-    // Gestione sezioni (Acquisto vs Officina)
     const buySection = document.getElementById('g-buy-section');
     const workshopSection = document.getElementById('g-workshop-section');
     const statusText = document.getElementById('g-car-status');
@@ -85,8 +89,6 @@ function updateGarageUI() {
         workshopSection.style.display = "block";
         statusText.innerText = isEquipped ? "IN USO" : "SBLOCCATA";
         statusText.style.color = isEquipped ? "var(--neon-cyan)" : "white";
-        
-        // Aggiorna statistiche e bottoni Officina
         updateWorkshopUI(car);
     } else {
         buySection.style.display = "block";
@@ -104,8 +106,10 @@ function updateWorkshopUI(car) {
         const info = getUpgradeInfo(car.id, type);
         const btn = document.getElementById(`btn-up-${type}`);
         const levelText = document.getElementById(`lvl-${type}`);
+        const progressBar = document.getElementById(`bar-${type}`);
         
-        levelText.innerText = `Lvl ${info.level}/${MAX_LEVEL}`;
+        levelText.innerText = `${info.level}/${MAX_LEVEL}`;
+        if (progressBar) progressBar.style.width = (info.level * 20) + "%";
         
         if (info.level >= MAX_LEVEL) {
             btn.innerText = "MAX";
