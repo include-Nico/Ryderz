@@ -22,14 +22,14 @@ function isContromano() {
 
 function manageEnemies() {
     // 1. GENERAZIONE (Spawn)
-    if (frames % enemySpawnRate === 0) {
+    // --- NON SPUNTA NESSUNO FINCHÈ L'ANIMAZIONE NON È FINITA ---
+    if (frames % enemySpawnRate === 0 && !player.isStarting) {
         const lane = Math.floor(Math.random() * 4); 
         const laneWidth = canvas.width / 4;
         const isOncoming = lane < 2; 
         const absSpeed = isOncoming ? (Math.random() * 4 + 6) : (Math.random() * 3 + 4); 
         const relSpeed = isOncoming ? (player.speedZ + absSpeed) : (player.speedZ - absSpeed);
         
-        // Blocca auto da dietro se non hai ancora iniziato ad accelerare
         if (!player.hasAcceleratedOnce && relSpeed < 0) return;
 
         const ey = relSpeed > 0 ? -100 : canvas.height + 150;
@@ -70,14 +70,12 @@ function manageEnemies() {
             }
         }
 
-        // --- EVITAMENTO INCIDENTI CON IL GIOCATORE (NOVITÀ) ---
+        // --- EVITAMENTO INCIDENTI CON IL GIOCATORE ---
         if (!e.isOncoming && !e.isChanging) {
-            // Se l'auto è nella nostra stessa corsia (X simile)
             if (Math.abs((e.x + e.width/2) - (player.x + player.width/2)) < 35) {
-                // Se l'auto è dietro di noi (Y > player.Y) e ci sta raggiungendo
                 let distanceToPlayer = e.y - (player.y + player.height);
                 if (distanceToPlayer > 0 && distanceToPlayer < 120 && e.absSpeed > player.speedZ) {
-                    e.absSpeed = player.speedZ; // Rallenta per non tamponare il giocatore!
+                    e.absSpeed = player.speedZ; 
                 }
             }
         }
@@ -126,7 +124,7 @@ function manageEnemies() {
         ctx.fillRect(e.x, e.y, e.width, e.height);
         
         if (e.indicator && !e.isBastard && Math.floor(frames / 8) % 2 === 0) {
-            ctx.fillStyle = '#FF9800'; // Arancione freccia
+            ctx.fillStyle = '#FF9800'; 
             let fx = e.indicator === 'left' ? e.x - 2 : e.x + e.width - 6;
             ctx.fillRect(fx, e.y + (e.isOncoming ? 0 : e.height - 8), 8, 8);
         }
@@ -135,9 +133,12 @@ function manageEnemies() {
         ctx.fillRect(e.x + 5, e.y + (e.isOncoming ? 45 : 10), e.width - 10, 15); 
         ctx.fillRect(e.x + 5, e.y + (e.isOncoming ? 10 : 45), e.width - 10, 15);
 
-        if (player.x < e.x + e.width && player.x + player.width > e.x &&
-            player.y < e.y + e.height && player.y + player.height > e.y) {
-            triggerGameOver(); 
+        // Disabilita le collisioni mortali durante l'animazione per estrema sicurezza
+        if (!player.isStarting) {
+            if (player.x < e.x + e.width && player.x + player.width > e.x &&
+                player.y < e.y + e.height && player.y + player.height > e.y) {
+                triggerGameOver(); 
+            }
         }
 
         if (!e.passed && relSpeed > 0 && e.y > player.y + player.height) {
