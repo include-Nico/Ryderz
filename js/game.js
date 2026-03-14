@@ -1,14 +1,14 @@
 // --- VARIABILI GLOBALI --
 let canvas, ctx, frames = 0, gameLoopId, score = 0, isGameOver = false, isPaused = false, roadOffset = 0, totalDistance = 0, touchInitialized = false, currentGear = 1, pitchDrop = 0; 
 
-// --- AUDIO ---
-const ignitionSound = new Audio('audio/ignition.mp3');
-const engineSound = new Audio('audio/engine.wav'); 
-engineSound.loop = true;
-engineSound.preservesPitch = false; 
-const crashSound = new Audio('audio/crash.mp3');
+// --- AUDIO GLOBALE (Così comunicano senza errori con app.js) ---
+window.ignitionSound = new Audio('audio/ignition.mp3');
+window.engineSound = new Audio('audio/engine.wav'); 
+window.engineSound.loop = true;
+window.engineSound.preservesPitch = false; 
+window.crashSound = new Audio('audio/crash.mp3');
 
-engineSound.addEventListener('timeupdate', function() {
+window.engineSound.addEventListener('timeupdate', function() {
     if (this.duration && this.currentTime >= this.duration - 0.15) this.currentTime = 0; 
 });
 
@@ -21,16 +21,16 @@ function initGame() {
     if (!touchInitialized) { setupTouchControls(); touchInitialized = true; }
 
     // Controllo Audio per l'accensione
-    if (typeof isAudioEnabled !== 'undefined' && isAudioEnabled) {
-        ignitionSound.currentTime = 0;
-        ignitionSound.play().catch(e => console.log(e));
-        ignitionSound.onended = () => {
+    if (window.isAudioEnabled) {
+        window.ignitionSound.currentTime = 0;
+        window.ignitionSound.play().catch(e => console.log(e));
+        window.ignitionSound.onended = () => {
             player.isIgniting = false;
             player.isStarting = true;
-            engineSound.play().catch(e => console.log(e));
+            window.engineSound.play().catch(e => console.log(e));
         };
     } else {
-        // Se mutato, salta l'attesa del suono e fai partire l'auto
+        // Se mutato, salta il suono d'accensione e fai partire subito l'auto
         player.isIgniting = false;
         player.isStarting = true;
     }
@@ -44,11 +44,11 @@ function togglePause() {
     const pauseMenu = document.getElementById('pause-menu');
     if (isPaused) {
         if (pauseMenu) pauseMenu.style.display = 'flex';
-        engineSound.pause(); 
+        window.engineSound.pause(); 
     } else {
         if (pauseMenu) pauseMenu.style.display = 'none';
-        if (typeof isAudioEnabled !== 'undefined' && isAudioEnabled) {
-            engineSound.play().catch(e => console.log(e)); 
+        if (window.isAudioEnabled) {
+            window.engineSound.play().catch(e => console.log(e)); 
         }
         runGameLoop(); 
     }
@@ -58,8 +58,8 @@ function quitGame() {
     isGameOver = true;
     isPaused = false;
     stopEngine();
-    engineSound.pause();
-    engineSound.currentTime = 0;
+    window.engineSound.pause();
+    window.engineSound.currentTime = 0;
     loadScreen('home'); 
 }
 
@@ -84,9 +84,10 @@ function runGameLoop() {
     updateScore();        
     totalDistance += player.speedZ; 
 
+    // Regolazione dinamica del pitch del motore
     if (pitchDrop > 0) { pitchDrop -= 0.03; if (pitchDrop < 0) pitchDrop = 0; }
     let pitch = 0.8 + (player.speedZ / playerProfile.stats.maxSpeed) * 1.5 - pitchDrop;
-    engineSound.playbackRate = Math.max(0.5, Math.min(pitch, 2.5));
+    window.engineSound.playbackRate = Math.max(0.5, Math.min(pitch, 2.5));
 
     frames++;
     gameLoopId = requestAnimationFrame(runGameLoop);
@@ -154,10 +155,10 @@ function updateScoreDisplay() {
 
 function triggerGameOver() {
     isGameOver = true;
-    engineSound.pause(); 
-    if (typeof isAudioEnabled !== 'undefined' && isAudioEnabled) {
-        crashSound.currentTime = 0;
-        crashSound.play().catch(e => console.log(e));
+    window.engineSound.pause(); 
+    if (window.isAudioEnabled) {
+        window.crashSound.currentTime = 0;
+        window.crashSound.play().catch(e => console.log(e));
     }
     stopEngine();
     addBanknotes(Math.floor(score / 5)); 
@@ -166,4 +167,4 @@ function triggerGameOver() {
 }
 
 function startEngine() { runGameLoop(); }
-function stopEngine() { cancelAnimationFrame(gameLoopId); engineSound.pause(); }
+function stopEngine() { cancelAnimationFrame(gameLoopId); window.engineSound.pause(); }
