@@ -4,8 +4,11 @@
         💵 <span id="home-banknotes">0</span>
     </div>
 
-    <svg class="home-bg-deco" aria-hidden="true" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice"
-         style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:400px;opacity:0.06;pointer-events:none;">
+    <!-- Decorazione grafica sfondo -->
+    <svg class="home-bg-deco" aria-hidden="true" viewBox="0 0 400 200"
+         preserveAspectRatio="xMidYMid slice"
+         style="position:absolute;top:0;left:50%;transform:translateX(-50%);
+                width:400px;opacity:0.06;pointer-events:none;">
         <defs>
             <linearGradient id="hg" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stop-color="#FF6A00"/>
@@ -26,9 +29,19 @@
     <p class="home-tagline">Street Racing</p>
 
     <div class="instructions-card">
-        <p id="instructions-text" style="margin:0;">Caricamento istruzioni…</p>
+        <p id="instructions-text">Caricamento istruzioni…</p>
     </div>
 
     <button class="play-btn" onclick="loadScreen('game')">▶ &nbsp;GIOCA ORA</button>
+
+    <script>
+        // Aggiorna il badge dei soldi al caricamento della home
+        (function() {
+            const p = JSON.parse(localStorage.getItem('ryderzProfileV4') || '{}');
+            const el = document.getElementById('home-banknotes');
+            if (el && p.banknotes !== undefined) el.textContent = p.banknotes;
+        })();
+        // Le istruzioni vengono popolate da populateInstructions() in app.js
+    </script>
 
 </section>
