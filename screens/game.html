@@ -1,55 +1,22 @@
-<section id="screen-garage" class="screen active">
-
-    <h2 class="garage-header">GARAGE</h2>
-    <p class="garage-sub">Scegli la tua auto</p>
-
-    <div style="
-        background: var(--bg-card);
-        border: 1px solid var(--border-dim);
-        border-top: 2px solid var(--neon-cyan);
-        border-radius: 12px;
-        padding: 20px;
-        text-align: center;
-        width: 85%;
-        max-width: 320px;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 30px rgba(0,240,255,0.06);
-    ">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <button onclick="changeCar(-1)" style="background:none;border:none;color:var(--neon-cyan);font-size:30px;cursor:pointer;">◀</button>
+<section id="screen-game" class="screen full-screen active">
+    <div id="game-ui">
+        <div class="hud-left">
+            <span id="score">Punti: 0</span>
             
-            <div style="height: 120px; display: flex; align-items: center; justify-content: center;">
-                <img id="g-car-img" src="" alt="Auto" style="max-height: 100px; max-width: 150px; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));">
-            </div>
-            
-            <button onclick="changeCar(1)" style="background:none;border:none;color:var(--neon-cyan);font-size:30px;cursor:pointer;">▶</button>
-        </div>
-
-        <p id="g-car-name" style="font-family:'Orbitron',monospace;font-size:20px;color:var(--neon-cyan);letter-spacing:.1em;margin-bottom:2px;">NOME AUTO</p>
-        <p id="g-car-status" style="font-size:13px;letter-spacing:.15em;text-transform:uppercase;">Stato</p>
-
-        <div style="border-top:1px solid var(--border-dim);margin:15px 0;"></div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:left;margin-bottom: 20px;">
-            <div>
-                <p style="font-size:11px;letter-spacing:.2em;color:var(--text-muted);text-transform:uppercase;">Velocità</p>
-                <p style="font-family:'Orbitron',monospace;font-size:18px;color:var(--text-primary);"><span id="g-stat-speed">0</span></p>
-            </div>
-            <div>
-                <p style="font-size:11px;letter-spacing:.2em;color:var(--text-muted);text-transform:uppercase;">Sterzata</p>
-                <p style="font-family:'Orbitron',monospace;font-size:18px;color:var(--text-primary);"><span id="g-stat-handling">0</span></p>
+            <div class="hud-speed-row">
+                <span id="speedometer">0 km/h</span>
+                <span id="gear-display">Marcia: 1</span>
             </div>
         </div>
 
-        <button id="g-action-btn" class="play-btn secondary" style="width: 100%; padding: 12px; font-size: 14px; display: none;">SELEZIONA</button>
-
+        <button id="btn-pause" onclick="togglePause()" ontouchend="togglePause()">⏸ PAUSA</button>
     </div>
 
-    <script>
-        // Avvio sicuro: attendiamo che gli script globali siano pronti
-        if (typeof initGarage === 'function') {
-            initGarage();
-        } else {
-            setTimeout(initGarage, 100);
-        }
-    </script>
+    <div id="pause-menu">
+        <h2 class="pause-title">IN PAUSA</h2>
+        <button class="play-btn success" onclick="togglePause()" ontouchend="togglePause()">▶️ RIPRENDI</button>
+        <button class="play-btn danger" onclick="quitGame()" ontouchend="quitGame()">🏠 MENU PRINCIPALE</button>
+    </div>
+
+    <canvas id="gameCanvas" width="400" height="600"></canvas>
 </section>
