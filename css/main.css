@@ -1,11 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap');
 
-/* ─── VARIABILI ──────────────────────────────── */
 :root {
     --neon-orange:  #FF6A00;
     --neon-cyan:    #00F0FF;
-    --neon-green:   #39FF14;
-    --neon-red:     #FF2057;
     --bg-void:      #07070D;
     --bg-card:      #1A1A2E;
     --bg-panel:     #12121F;
@@ -14,10 +11,9 @@
     --border-dim:   #2A2A44;
 }
 
-/* ─── RESET ──────────────────────────────────── */
-*, *::before, *::after {
-    box-sizing: border-box;
-    margin: 0; padding: 0;
+* { 
+    box-sizing: border-box; 
+    margin: 0; padding: 0; 
     -webkit-touch-callout: none;
     user-select: none;
 }
@@ -30,7 +26,6 @@ body, html {
     overflow: hidden;
 }
 
-/* ─── LAYOUT ─────────────────────────────────── */
 #app-container {
     display: flex;
     flex-direction: column;
@@ -41,249 +36,72 @@ body, html {
 #screens-area {
     flex-grow: 1;
     position: relative;
-    overflow: hidden;
 }
 
+/* Gestione Schermate */
 .screen {
-    display: flex;
+    display: none;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     width: 100%;
     height: 100%;
     position: absolute;
     top: 0; left: 0;
-    background: var(--bg-void);
 }
 
-.screen:not(.active) { display: none !important; }
+.screen.active {
+    display: flex;
+}
 
-/* ─── TABS ───────────────────────────────────── */
+#global-audio-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    background: var(--bg-card);
+    border: 2px solid var(--neon-orange);
+    color: white;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    cursor: pointer;
+    font-size: 20px;
+}
+
 #bottom-tabs {
     display: flex;
     justify-content: space-around;
     background: #0E0E1A;
-    padding: 15px 0;
+    padding: 10px 0;
     border-top: 1px solid var(--border-dim);
-    flex-shrink: 0;
 }
 
 .tab-btn {
-    background: none;
-    border: none;
+    background: none; border: none;
     color: var(--text-muted);
     font-size: 12px;
-    text-align: center;
     cursor: pointer;
-    font-family: 'Rajdhani', sans-serif;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    transition: color 0.2s;
-    padding: 4px 8px;
 }
 
 .tab-btn.active { color: var(--neon-orange); }
 
-/* ─── HOME SCREEN ────────────────────────────── */
-.home-money-badge {
-    background: rgba(0,240,255,0.08);
-    border: 1px solid var(--neon-cyan);
-    padding: 8px 18px;
-    border-radius: 20px;
-    color: var(--neon-cyan);
-    font-family: 'Orbitron', monospace;
-    font-size: 14px;
-    font-weight: 700;
-    position: absolute;
-    top: 18px;
-    right: 18px;
-    letter-spacing: 0.05em;
-}
-
-.home-logo {
-    font-family: 'Orbitron', monospace;
-    font-size: 52px;
-    font-weight: 900;
-    color: var(--neon-orange);
-    text-shadow:
-        0 0 10px rgba(255,106,0,0.8),
-        0 0 40px rgba(255,106,0,0.4),
-        0 0 80px rgba(255,106,0,0.15);
-    letter-spacing: 0.18em;
-    margin-bottom: 4px;
-}
-
-.home-tagline {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-muted);
-    letter-spacing: 0.35em;
-    text-transform: uppercase;
-    margin-bottom: 36px;
-}
-
-.instructions-card {
-    background: rgba(255,106,0,0.05);
-    border: 1px solid rgba(255,106,0,0.2);
-    border-radius: 12px;
-    padding: 16px 24px;
-    max-width: 340px;
-    width: 88%;
-    font-size: 13px;
-    line-height: 1.8;
-    color: var(--text-muted);
-    text-align: center;
-    margin-bottom: 32px;
-}
-
-.instructions-card strong {
-    color: var(--neon-orange);
-}
-
-/* ─── BOTTONI ────────────────────────────────── */
-.play-btn {
-    background: var(--neon-orange);
-    color: #fff;
-    border: none;
-    padding: 15px 30px;
-    border-radius: 8px;
-    font-family: 'Orbitron', monospace;
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-    transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
-    box-shadow: 0 0 12px rgba(255,106,0,0.4);
-}
-
-.play-btn:hover  { opacity: 0.9; box-shadow: 0 0 20px rgba(255,106,0,0.6); }
-.play-btn:active { transform: scale(0.97); }
-
-.play-btn.secondary {
-    background: var(--bg-card);
-    border: 1px solid var(--border-dim);
-    color: var(--text-primary);
-    box-shadow: none;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-}
-
-.play-btn.secondary:hover {
-    border-color: var(--neon-orange);
-    color: var(--neon-orange);
-    box-shadow: 0 0 8px rgba(255,106,0,0.2);
-}
-
-.play-btn.success {
-    background: linear-gradient(135deg, #1a6b1a, #27ae60);
-    box-shadow: 0 0 12px rgba(39,174,96,0.4);
-}
-
-.play-btn.success:hover { box-shadow: 0 0 20px rgba(39,174,96,0.6); }
-
-.play-btn.danger {
-    background: linear-gradient(135deg, #7b1010, var(--neon-red));
-    box-shadow: 0 0 12px rgba(255,32,87,0.4);
-}
-
-.play-btn.danger:hover { box-shadow: 0 0 20px rgba(255,32,87,0.6); }
-
-.play-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    transform: none;
-}
-
-/* ─── RESULT SCREEN ──────────────────────────── */
-.result-crash-title {
-    font-family: 'Orbitron', monospace;
-    font-size: 28px;
-    font-weight: 900;
-    color: var(--neon-red);
-    text-shadow: 0 0 15px rgba(255,32,87,0.8), 0 0 40px rgba(255,32,87,0.3);
-    letter-spacing: 0.1em;
-    margin-bottom: 32px;
-    text-align: center;
-    animation: crash-pulse 1.2s ease-in-out infinite;
-}
-
-@keyframes crash-pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50%       { opacity: 0.8; transform: scale(1.03); }
-}
-
-.result-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-dim);
-    border-top: 3px solid var(--neon-orange);
-    border-radius: 16px;
-    padding: 32px 40px;
-    text-align: center;
-    width: 82%;
-    max-width: 320px;
-    margin-bottom: 32px;
-}
-
-.result-label {
-    font-size: 11px;
-    letter-spacing: 0.2em;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    margin-bottom: 6px;
-}
-
-.result-score-value {
-    font-family: 'Orbitron', monospace;
-    font-size: 42px;
-    font-weight: 900;
-    color: var(--neon-orange);
-    text-shadow: 0 0 12px rgba(255,106,0,0.6);
-    margin-bottom: 16px;
-}
-
-.result-divider {
-    border: none;
-    border-top: 1px solid var(--border-dim);
-    margin: 16px 0;
-}
-
-.result-cash-value {
-    font-family: 'Orbitron', monospace;
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--neon-cyan);
-    text-shadow: 0 0 8px rgba(0,240,255,0.5);
-}
-
-/* ─── SETTINGS SCREEN ────────────────────────── */
-.settings-header {
-    font-family: 'Orbitron', monospace;
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--neon-orange);
-    letter-spacing: 0.15em;
-    margin-bottom: 28px;
-    text-shadow: 0 0 8px rgba(255,106,0,0.5);
-}
-
-.settings-coming-soon {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 16px;
-    color: var(--text-muted);
-    letter-spacing: 0.06em;
-    line-height: 1.6;
-}
-
-/* ─── FLASH UPGRADE ──────────────────────────── */
+/* Classi per Officina */
 .flash-upgrade {
     animation: neon-flash 0.4s ease-out;
 }
 
 @keyframes neon-flash {
-    0%   { border-color: var(--neon-orange); box-shadow: 0 0 0px   var(--neon-cyan); }
-    50%  { border-color: var(--neon-cyan);   box-shadow: 0 0 20px  var(--neon-cyan); }
-    100% { border-color: var(--neon-orange); box-shadow: 0 0 0px   var(--neon-cyan); }
+    0% { border-color: var(--neon-orange); box-shadow: 0 0 0px var(--neon-cyan); }
+    50% { border-color: var(--neon-cyan); box-shadow: 0 0 30px var(--neon-cyan); transform: scale(1.02); }
+    100% { border-color: var(--neon-orange); box-shadow: 0 0 0px var(--neon-cyan); }
+}
+
+.home-money-badge {
+    background: rgba(0,240,255,0.1);
+    border: 1px solid var(--neon-cyan);
+    padding: 8px 15px;
+    border-radius: 20px;
+    color: var(--neon-cyan);
+    font-family: 'Orbitron';
+    margin-bottom: 10px;
 }
