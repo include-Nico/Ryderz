@@ -1,172 +1,158 @@
-// ─── VARIABILI GLOBALI ───────────────────────────────────────────────────────
-let canvas, ctx;
-let animationId  = null;
-let isGameOver   = false;
-let isPaused     = false;
-let frames       = 0;
-let score        = 0;
-let roadOffset   = 0;
+// --- VARIABILI GLOBALI ---
+let canvas, ctx, frames = 0, gameLoopId, score = 0, isGameOver = false, isPaused = false, roadOffset = 0, totalDistance = 0, touchInitialized = false, currentGear = 1, pitchDrop = 0; 
 
-// ─── INIT ────────────────────────────────────────────────────────────────────
+// --- AUDIO ---
+const ignitionSound = new Audio('audio/ignition.mp3');
+const engineSound = new Audio('audio/engine.wav'); 
+engineSound.loop = true;
+engineSound.preservesPitch = false; 
+const crashSound = new Audio('audio/crash.mp3');
+
+engineSound.addEventListener('timeupdate', function() {
+    if (this.duration && this.currentTime >= this.duration - 0.15) this.currentTime = 0; 
+});
+
 function initGame() {
     canvas = document.getElementById('gameCanvas');
-    ctx    = canvas.getContext('2d');
+    ctx = canvas.getContext('2d');
+    frames = 0; score = 0; roadOffset = 0; totalDistance = 0; currentGear = 1; pitchDrop = 0; isGameOver = false; isPaused = false; 
+    resetPlayer();  
+    resetTraffic(); 
+    if (!touchInitialized) { setupTouchControls(); touchInitialized = true; }
 
-    isGameOver = false;
-    isPaused   = false;
-    frames     = 0;
-    score      = 0;
-    roadOffset = 0;
-
-    resetPlayer();
-    resetTraffic();
-    setupTouchControls();
-
-    // Sequenza avvio: accensione → burnout → partenza
-    setTimeout(() => {
+    ignitionSound.currentTime = 0;
+    ignitionSound.play().catch(e => {});
+    ignitionSound.onended = () => {
         player.isIgniting = false;
         player.isStarting = true;
-    }, 900);
-
-    if (animationId) cancelAnimationFrame(animationId);
-    gameLoop();
+        engineSound.play();
+    };
+    startEngine();
 }
 
-// Chiamato da app.js quando si esce dal gioco
-function stopEngine() {
-    if (animationId) {
-        cancelAnimationFrame(animationId);
-        animationId = null;
-    }
-}
-
-// ─── PAUSA ───────────────────────────────────────────────────────────────────
 function togglePause() {
-    if (isGameOver) return;
-    isPaused = !isPaused;
-    const menu = document.getElementById('pause-menu');
-    if (menu) menu.style.display = isPaused ? 'flex' : 'none';
-    if (!isPaused) gameLoop();   // riprende il loop
+    if (isGameOver || player.isStarting) return; 
+    isPaused = !isPaused; 
+    const pauseMenu = document.getElementById('pause-menu');
+    if (isPaused) {
+        if (pauseMenu) pauseMenu.style.display = 'flex';
+        engineSound.pause(); 
+    } else {
+        if (pauseMenu) pauseMenu.style.display = 'none';
+        engineSound.play(); 
+        runGameLoop(); 
+    }
 }
 
 function quitGame() {
-    stopEngine();
-    loadScreen('home');
-}
-
-// ─── GAME OVER ───────────────────────────────────────────────────────────────
-function triggerGameOver() {
-    if (isGameOver) return;
     isGameOver = true;
+    isPaused = false;
     stopEngine();
-
-    const cash = Math.floor(score / 10);
-    addBanknotes(cash);
-    window.lastScore = score;
-    window.lastCash  = cash;
-
-    // Flash rosso poi vai alla schermata risultato
-    ctx.fillStyle = 'rgba(255,0,0,0.45)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    setTimeout(() => loadScreen('result'), 700);
+    // Assicura che l'audio del motore si fermi prima di uscire
+    engineSound.pause();
+    engineSound.currentTime = 0;
+    loadScreen('home'); 
 }
 
-// ─── HUD ─────────────────────────────────────────────────────────────────────
-function updateScoreDisplay() {
-    const el = document.getElementById('score');
-    if (el) el.innerText = 'Punti: ' + score;
-}
+function runGameLoop() {
+    if (isGameOver || isPaused) return; 
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    updatePlayer();       
+    increaseDifficulty(); 
+    drawRoad();           
+    manageEnemies();      
+    drawPlayer();         
+    drawLiscioEffects();  
+    
+    if (isContromano() && !player.isStarting && !player.isIgniting) {
+        let alpha = 0.7 + Math.sin(frames * 0.1) * 0.3;
+        ctx.fillStyle = `rgba(255, 50, 50, ${alpha})`;
+        ctx.font = "bold 20px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("⚠️ CONTROMANO: PUNTI X2 ⚠️", canvas.width / 2, 70);
+        ctx.textAlign = "left"; 
+    }
+    updateScore();        
+    totalDistance += player.speedZ; 
 
-function updateHUD() {
-    const kmh = Math.floor(player.speedZ * 10);
-
-    const speedEl = document.getElementById('speedometer');
-    if (speedEl) speedEl.innerText = kmh + ' km/h';
-
-    let gear = 1;
-    if      (kmh > 130) gear = 6;
-    else if (kmh > 100) gear = 5;
-    else if (kmh > 70)  gear = 4;
-    else if (kmh > 45)  gear = 3;
-    else if (kmh > 20)  gear = 2;
-
-    const gearEl = document.getElementById('gear-display');
-    if (gearEl) gearEl.innerText = 'Marcia: ' + gear;
-
-    updateScoreDisplay();
-}
-
-// ─── DISEGNO STRADA ──────────────────────────────────────────────────────────
-function drawRoad() {
-    // Sfondo asfalto
-    ctx.fillStyle = '#3A3A3A';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Animazione offset basato sulla velocità
-    roadOffset = (roadOffset + player.speedZ * 0.8) % 50;
-
-    const W = canvas.width;
-    const H = canvas.height;
-
-    // ── Linee tratteggiate corsie ─────────────────────────────────────────────
-    ctx.save();
-    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([35, 15]);
-    ctx.lineDashOffset = -roadOffset;
-
-    // corsia 1/4 (sinistra contromano)
-    ctx.beginPath();
-    ctx.moveTo(W / 4, 0);
-    ctx.lineTo(W / 4, H);
-    ctx.stroke();
-
-    // corsia 3/4 (destra senso di marcia)
-    ctx.beginPath();
-    ctx.moveTo((W * 3) / 4, 0);
-    ctx.lineTo((W * 3) / 4, H);
-    ctx.stroke();
-
-    ctx.setLineDash([]);
-    ctx.restore();
-
-    // ── Mezzeria doppia gialla ────────────────────────────────────────────────
-    ctx.fillStyle = '#FFEB3B';
-    ctx.fillRect(W / 2 - 4, 0, 3, H);
-    ctx.fillRect(W / 2 + 2, 0, 3, H);
-}
-
-// ─── GAME LOOP ────────────────────────────────────────────────────────────────
-function gameLoop() {
-    if (isGameOver || isPaused) return;
+    if (pitchDrop > 0) { pitchDrop -= 0.03; if (pitchDrop < 0) pitchDrop = 0; }
+    let pitch = 0.8 + (player.speedZ / playerProfile.stats.maxSpeed) * 1.5 - pitchDrop;
+    engineSound.playbackRate = Math.max(0.5, Math.min(pitch, 2.5));
 
     frames++;
+    gameLoopId = requestAnimationFrame(runGameLoop);
+}
 
-    // Disegna road
-    drawRoad();
+function drawRoad() {
+    ctx.fillStyle = '#444'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    roadOffset = (roadOffset + player.speedZ) % 40; 
+    ctx.fillStyle = '#FFEB3B'; 
+    for (let i = -40; i < canvas.height; i += 40) {
+        ctx.fillRect(canvas.width / 2 - 3, i + roadOffset, 2, 20);
+        ctx.fillRect(canvas.width / 2 + 1, i + roadOffset, 2, 20);
+    }
+    ctx.fillStyle = 'white';
+    for (let i = -40; i < canvas.height; i += 40) {
+        ctx.fillRect(canvas.width / 4 - 2, i + roadOffset, 4, 20); 
+        ctx.fillRect((canvas.width / 4) * 3 - 2, i + roadOffset, 4, 20); 
+    }
+    if (totalDistance < canvas.height + 1000) {
+        let sostaY = (canvas.height - 300) + totalDistance; 
+        ctx.fillStyle = '#222'; ctx.fillRect(canvas.width - 50, sostaY, 50, 900);
+        ctx.fillStyle = 'white'; ctx.fillRect(canvas.width - 52, 0, 2, canvas.height); 
+        ctx.fillStyle = '#444'; ctx.fillRect(canvas.width - 52, sostaY + 100, 2, 700);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'; ctx.font = "bold 20px Arial";
+        ctx.fillText("AREA SOS", canvas.width - 48, sostaY + 300);
+    } else {
+        ctx.fillStyle = 'white'; ctx.fillRect(canvas.width - 5, 0, 5, canvas.height);
+        ctx.fillRect(0, 0, 5, canvas.height);
+    }
+}
 
-    // Aggiorna e disegna player
-    updatePlayer();
-    drawPlayer();
-
-    // Traffico (aggiorna, controlla collisioni, disegna)
-    manageEnemies();
-
-    // Effetti "liscio"
-    drawLiscioEffects();
-
-    // Punteggio passivo (ogni 60 frame, basato sulla velocità)
-    if (player.hasAcceleratedOnce && !player.isStarting && frames % 60 === 0) {
-        score += Math.floor(player.speedZ * 0.5);
+function updateScore() {
+    if (frames % 10 === 0 && !player.isStarting && !player.isIgniting && player.speedZ >= 1) {
+        let basePoints = Math.floor(player.speedZ / 3);
+        if (basePoints < 1) basePoints = 1;
+        score += isContromano() ? (basePoints * 2) : basePoints;
         updateScoreDisplay();
     }
-
-    // Difficoltà crescente
-    if (!player.isStarting) increaseDifficulty();
-
-    // Aggiorna HUD
-    updateHUD();
-
-    animationId = requestAnimationFrame(gameLoop);
 }
+
+function updateScoreDisplay() {
+    const scoreElement = document.getElementById('score');
+    if (scoreElement) scoreElement.innerText = `Punti: ${score}`;
+    const speedElement = document.getElementById('speedometer');
+    if (speedElement) speedElement.innerText = `${Math.floor(player.speedZ * 10)} km/h`;
+    
+    let visualSpeed = Math.floor(player.speedZ * 10);
+    
+    // --- LOGICA 6 MARCE ---
+    let newGear = 1;
+    if (visualSpeed > 125) newGear = 6;      // Sesta marcia
+    else if (visualSpeed > 100) newGear = 5;
+    else if (visualSpeed > 75) newGear = 4;
+    else if (visualSpeed > 50) newGear = 3;
+    else if (visualSpeed > 30) newGear = 2;
+
+    if (newGear > currentGear) {
+        player.shiftDelay = 18; // Cambio leggermente più lento per le marce alte
+        pitchDrop = 0.6; 
+    }
+    currentGear = newGear;
+    const gearElement = document.getElementById('gear-display');
+    if (gearElement) gearElement.innerText = `Marcia: ${currentGear}`;
+}
+
+function triggerGameOver() {
+    isGameOver = true;
+    engineSound.pause(); 
+    crashSound.currentTime = 0;
+    crashSound.play().catch(e => {});
+    stopEngine();
+    addBanknotes(Math.floor(score / 5)); 
+    window.lastScore = score; window.lastCash = Math.floor(score / 5);
+    setTimeout(() => { loadScreen('result'); }, 800);
+}
+
+function startEngine() { runGameLoop(); }
+function stopEngine() { cancelAnimationFrame(gameLoopId); engineSound.pause(); }
