@@ -1,15 +1,15 @@
-// Usiamo "V3" per resettare il salvataggio e forzare i nuovi parametri più lenti
-let playerProfile = JSON.parse(localStorage.getItem('ryderzProfileV3')) || {
+// Usiamo "V2" per forzare il gioco a caricare queste nuove statistiche
+let playerProfile = JSON.parse(localStorage.getItem('ryderzProfileV2')) || {
     banknotes: 0,
     stats: {
-        handling: 5.5,      // Sterzata
-        acceleration: 0.025, // DIMEZZATA: era 0.05, ora l'auto accelera in modo molto più graduale
-        maxSpeed: 13        // Corrisponde a 130 km/h
+        handling: 5.5,      
+        acceleration: 0.04, // Accelerazione base ridotta (era 0.05)
+        maxSpeed: 15        // Corrisponde a 150 km/h potenziali (era 13)
     }
 };
 
 function saveProfile() {
-    localStorage.setItem('ryderzProfileV3', JSON.stringify(playerProfile));
+    localStorage.setItem('ryderzProfileV2', JSON.stringify(playerProfile));
 }
 
 function addBanknotes(amount) {
