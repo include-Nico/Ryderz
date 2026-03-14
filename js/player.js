@@ -8,13 +8,13 @@ const player = {
     dx: 0,          
     speedZ: 0,      
     maxSpeedZ: 0,  
-    minSpeedZ: 3,   
+    minSpeedZ: 1,   // <--- CORRETTO: Velocità minima a 10 km/h
     accelRate: 0,
     isAccelerating: false,
     hasAcceleratedOnce: false, 
     shiftDelay: 0, 
-    isIgniting: true, // Fase 1: Accensione motore (ferma)
-    isStarting: false // Fase 2: Immissione in strada (automatica)
+    isIgniting: true, 
+    isStarting: false 
 };
 
 function resetPlayer() {
@@ -32,7 +32,7 @@ function resetPlayer() {
     player.accelRate = playerProfile.stats.acceleration;
     player.maxSpeedZ = playerProfile.stats.maxSpeed;
     player.speedZ = 0; // Parte da zero assoluto
-    player.minSpeedZ = 3; 
+    player.minSpeedZ = 1; // <--- CORRETTO: Minimo a 10 km/h
 }
 
 // --- COMANDI BLOCCATI DURANTE L'AVVIO ---
@@ -99,6 +99,7 @@ function updatePlayer() {
 
         // Una volta raggiunti i 10 km/h (speedZ = 1.0) e rientrato in corsia
         if (player.speedZ >= 1.0 && player.x <= canvas.width - 100) {
+            player.speedZ = 1.0; // Fissa la velocità a 10 esatti
             player.isStarting = false; // Restituisce i comandi
         }
         return;
