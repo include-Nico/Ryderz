@@ -2,6 +2,7 @@
 let menuMusic = new Audio('audio/menu.mp3');
 menuMusic.loop = true;
 menuMusic.volume = 0.4; 
+let isAudioEnabled = false; // Stato globale dell'audio
 
 window.onload = () => {
     loadScreen('home');
@@ -9,6 +10,16 @@ window.onload = () => {
 
 function isTouchDevice() {
     return (('ontouchstart' in window) || (navigator.maxTouchPoints > 0));
+}
+
+// Nuova funzione per attivare l'audio tramite click dell'utente
+function enableAudio() {
+    isAudioEnabled = true;
+    menuMusic.play().catch(e => console.log("Audio sbloccato"));
+    
+    // Aggiorna l'interfaccia se necessario
+    const btn = document.getElementById('btn-audio-toggle');
+    if (btn) btn.style.display = 'none'; // Nascondi il tasto dopo l'attivazione
 }
 
 async function loadScreen(screenName, clickedTab = null) {
@@ -26,6 +37,10 @@ async function loadScreen(screenName, clickedTab = null) {
                 if (isTouchDevice()) instructionsElement.innerHTML = "📱 <b>Mobile:</b> Tieni premuto per accelerare e trascina per sterzare.";
                 else instructionsElement.innerHTML = "💻 <b>PC:</b> Tieni premuto <b>W</b> (o Su) per accelerare. Usa <b>A</b> e <b>D</b> per sterzare.";
             }
+
+            // Mostra il tasto audio solo se non è ancora stato attivato
+            const btn = document.getElementById('btn-audio-toggle');
+            if (btn && isAudioEnabled) btn.style.display = 'none';
         }
 
         if (screenName === 'result') {
@@ -40,7 +55,6 @@ async function loadScreen(screenName, clickedTab = null) {
 
         const tabs = document.getElementById('bottom-tabs');
         
-        // --- LOGICA AUDIO: Stop musica menu se si gioca ---
         if (screenName === 'game' || screenName === 'result') {
             tabs.style.display = 'none';
             menuMusic.pause(); 
@@ -48,8 +62,11 @@ async function loadScreen(screenName, clickedTab = null) {
         } else {
             tabs.style.display = 'flex';
             if (typeof stopEngine === "function") stopEngine(); 
-            // La musica riparte al primo click dell'utente
-            menuMusic.play().catch(e => console.log("Audio in attesa di interazione"));
+            
+            // Riproduci solo se l'utente ha già attivato l'audio
+            if (isAudioEnabled) {
+                menuMusic.play().catch(e => console.log("Audio in attesa"));
+            }
         }
     } catch (error) { console.error("Errore:", error); }
 }
