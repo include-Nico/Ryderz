@@ -1,19 +1,110 @@
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap');
+
 :root {
-    --neon-orange: #FF6A00; --neon-cyan: #00F0FF; --bg-void: #07070D; --bg-card: #1A1A2E; --border-dim: #2A2A44; --text-muted: #6668A0;
+    --neon-orange:  #FF6A00;
+    --neon-cyan:    #00F0FF;
+    --bg-void:      #07070D;
+    --bg-card:      #1A1A2E;
+    --bg-panel:     #12121F;
+    --text-primary: #F0F0FF;
+    --text-muted:   #6668A0;
+    --border-dim:   #2A2A44;
 }
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
-body, html { width: 100%; height: 100%; background: var(--bg-void); font-family: 'Rajdhani', sans-serif; overflow: hidden; }
-#app-container { display: flex; flex-direction: column; height: 100%; width: 100vw; position: relative; }
-#screens-area { flex-grow: 1; position: relative; }
-.screen { display: none; flex-direction: column; align-items: center; width: 100%; height: 100%; position: absolute; }
-.screen.active { display: flex; }
-#bottom-tabs { display: flex; justify-content: space-around; background: #0E0E1A; padding: 10px 0; border-top: 1px solid var(--border-dim); }
-.tab-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 12px; }
+
+* { 
+    box-sizing: border-box; 
+    margin: 0; padding: 0; 
+    -webkit-touch-callout: none;
+    user-select: none;
+}
+
+body, html {
+    width: 100%; height: 100%;
+    background-color: var(--bg-void);
+    font-family: 'Rajdhani', sans-serif;
+    color: var(--text-primary);
+    overflow: hidden;
+}
+
+#app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100vw;
+}
+
+#screens-area {
+    flex-grow: 1;
+    position: relative;
+}
+
+/* FIX: Schermate */
+.screen {
+    display: flex; /* Cambiato da none a flex */
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0; left: 0;
+    background: var(--bg-void); /* Assicura che non siano trasparenti */
+}
+
+/* Nascondi solo se non attive gestito via JS o tramite questa classe */
+.screen:not(.active) {
+    display: none !important;
+}
+
+#bottom-tabs {
+    display: flex;
+    justify-content: space-around;
+    background: #0E0E1A;
+    padding: 15px 0;
+    border-top: 1px solid var(--border-dim);
+}
+
+.tab-btn {
+    background: none; border: none;
+    color: var(--text-muted);
+    font-size: 12px;
+    text-align: center;
+    cursor: pointer;
+}
+
 .tab-btn.active { color: var(--neon-orange); }
-.flash-upgrade { animation: neon-flash 0.4s ease-out; }
+
+/* Stili Officina */
+.home-money-badge {
+    background: rgba(0,240,255,0.1);
+    border: 1px solid var(--neon-cyan);
+    padding: 8px 15px;
+    border-radius: 20px;
+    color: var(--neon-cyan);
+    font-family: 'Orbitron';
+}
+
+.play-btn {
+    background: var(--neon-orange);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 5px;
+    font-family: 'Orbitron';
+    cursor: pointer;
+}
+
+.play-btn.secondary {
+    background: var(--bg-card);
+    border: 1px solid var(--border-dim);
+}
+
+/* Animazione Flash */
+.flash-upgrade {
+    animation: neon-flash 0.4s ease-out;
+}
+
 @keyframes neon-flash {
     0% { border-color: var(--neon-orange); box-shadow: 0 0 0px var(--neon-cyan); }
-    50% { border-color: var(--neon-cyan); box-shadow: 0 0 30px var(--neon-cyan); transform: scale(1.02); }
+    50% { border-color: var(--neon-cyan); box-shadow: 0 0 20px var(--neon-cyan); }
     100% { border-color: var(--neon-orange); box-shadow: 0 0 0px var(--neon-cyan); }
 }
