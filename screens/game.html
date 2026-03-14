@@ -1,26 +1,22 @@
 <section id="screen-game" class="screen full-screen active">
-
-    <!-- HUD -->
     <div id="game-ui">
-        <!-- Left cluster: score + speedometer -->
-        <div class="hud-left">
+        <div style="display: flex; flex-direction: column;">
             <span id="score">Punti: 0</span>
-            <div class="hud-speed-row">
-                <span id="speedometer">30 km/h</span>
-                <span id="gear-display">Marcia: 1</span>
+            
+            <div style="display: flex; align-items: baseline; gap: 12px; margin-top: 5px;">
+                <span id="speedometer" style="font-size: 24px; font-weight: bold; color: #00e5ff; text-shadow: 2px 2px 4px #000;">0 km/h</span>
+                <span id="gear-display" style="font-size: 18px; font-weight: bold; color: #FFEB3B; text-shadow: 1px 1px 2px #000;">Marcia: 1</span>
             </div>
         </div>
 
-        <button id="btn-pause" onclick="togglePause()">⏸ PAUSA</button>
+        <button id="btn-pause" onclick="togglePause()" ontouchend="togglePause()">⏸ PAUSA</button>
     </div>
 
-    <!-- Pause overlay -->
-    <div id="pause-menu" style="display:none;">
-        <h2 class="pause-title">PAUSA</h2>
-        <button class="play-btn success" onclick="togglePause()">▶ RIPRENDI</button>
-        <button class="play-btn danger"  onclick="quitGame()">⬛ MENU</button>
+    <div id="pause-menu" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 200; flex-direction: column; justify-content: center; align-items: center;">
+        <h2 style="color: white; font-size: 40px; margin-bottom: 40px; text-shadow: 2px 2px 5px #000;">IN PAUSA</h2>
+        <button class="play-btn" style="margin-bottom: 20px; background-color: #4CAF50;" onclick="togglePause()" ontouchend="togglePause()">▶️ RIPRENDI</button>
+        <button class="play-btn" style="background-color: #d32f2f;" onclick="quitGame()" ontouchend="quitGame()">🏠 MENU PRINCIPALE</button>
     </div>
 
     <canvas id="gameCanvas" width="400" height="600"></canvas>
-
 </section>
