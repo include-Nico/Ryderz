@@ -1,7 +1,7 @@
-// --- VARIABILI GLOBALI --
+// --- VARIABILI GLOBALI -- (Non toccare, prevengono conflitti con traffic.js e player.js)
 let canvas, ctx, frames = 0, gameLoopId, score = 0, isGameOver = false, isPaused = false, roadOffset = 0, totalDistance = 0, touchInitialized = false, currentGear = 1, pitchDrop = 0; 
 
-// --- AUDIO GLOBALE (Così comunicano senza errori con app.js) ---
+// --- AUDIO GLOBALE GIOCO ---
 window.ignitionSound = new Audio('audio/ignition.mp3');
 window.engineSound = new Audio('audio/engine.wav'); 
 window.engineSound.loop = true;
@@ -136,7 +136,6 @@ function updateScoreDisplay() {
     
     let visualSpeed = Math.floor(player.speedZ * 10);
     
-    // --- LOGICA 6 MARCE ---
     let newGear = 1;
     if (visualSpeed > 125) newGear = 6;      
     else if (visualSpeed > 100) newGear = 5;
