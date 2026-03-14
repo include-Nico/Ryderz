@@ -1,4 +1,4 @@
-// --- GESTIONE AUDIO MENU GLOBALE --
+// --- GESTIONE AUDIO MENU GLOBALE ---
 window.menuMusic = new Audio('audio/menu.mp3');
 window.menuMusic.loop = true;
 window.menuMusic.volume = 0.4; 
@@ -80,7 +80,13 @@ async function loadScreen(screenName, clickedTab = null) {
         if (screenName === 'game' || screenName === 'result') {
             if (tabs) tabs.style.display = 'none';
             window.menuMusic.pause(); 
-            if (screenName === 'game') initGame(); 
+            
+            if (screenName === 'game') {
+                // AGGIUNTO: Piccolo ritardo per assicurarsi che il canvas sia presente nel DOM
+                setTimeout(() => {
+                    if (typeof initGame === "function") initGame();
+                }, 50);
+            }
         } else {
             if (tabs) tabs.style.display = 'flex';
             if (typeof stopEngine === "function") stopEngine(); 
