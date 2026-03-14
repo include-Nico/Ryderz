@@ -1,9 +1,9 @@
-// --- GESTIONE AUDIO MENU --
-let menuMusic = new Audio('audio/menu.mp3');
-menuMusic.loop = true;
-menuMusic.volume = 0.4; 
+// --- GESTIONE AUDIO MENU ---
+window.menuMusic = new Audio('audio/menu.mp3');
+window.menuMusic.loop = true;
+window.menuMusic.volume = 0.4; 
 
-// Variabile globale che dice se l'audio è attivo (spento di default)
+// L'audio parte disattivato come richiesto
 window.isAudioEnabled = false; 
 
 function toggleAudio() {
@@ -11,22 +11,31 @@ function toggleAudio() {
     const audioBtn = document.getElementById('global-audio-btn');
     
     if (window.isAudioEnabled) {
-        audioBtn.innerText = '🔊'; // Cambia icona
+        audioBtn.innerHTML = '🔊'; 
+        audioBtn.style.borderColor = '#00F0FF';
+        audioBtn.style.boxShadow = '0 0 15px rgba(0,240,255,0.5)';
         
-        // Se non siamo in gioco o nel risultato, fai partire la musica del menu
+        // Controlliamo in che schermata siamo per attivare l'audio giusto
         const screensArea = document.getElementById('screens-area').innerHTML;
-        if (!screensArea.includes('screen-game') && !screensArea.includes('screen-result')) {
-            menuMusic.play().catch(e => console.log(e));
-        }
-        // Se siamo in gioco e in pausa, riattiva il motore
-        if (typeof engineSound !== 'undefined' && typeof isPaused !== 'undefined' && !isPaused && typeof isGameOver !== 'undefined' && !isGameOver) {
-            engineSound.play().catch(e=>{});
+        if (screensArea.includes('screen-game')) {
+            // Se siamo in gioco e non in pausa, fai partire il motore
+            if (window.engineSound && typeof isPaused !== 'undefined' && !isPaused && typeof isGameOver !== 'undefined' && !isGameOver) {
+                window.engineSound.play().catch(e=>{});
+            }
+        } else if (!screensArea.includes('screen-result')) {
+            // Se siamo nel menu o nel garage, fai partire la musica del menu
+            window.menuMusic.play().catch(e => console.log(e));
         }
     } else {
-        audioBtn.innerText = '🔇'; // Cambia icona in Muto
-        menuMusic.pause(); // Stoppa la musica
-        // Stoppa anche il motore in gioco se presente
-        if (typeof engineSound !== 'undefined') engineSound.pause();
+        audioBtn.innerHTML = '🔇'; 
+        audioBtn.style.borderColor = '#FF6A00';
+        audioBtn.style.boxShadow = '0 0 15px rgba(255,106,0,0.5)';
+        
+        // Muta tutto
+        window.menuMusic.pause(); 
+        if (window.engineSound) window.engineSound.pause();
+        if (window.ignitionSound) window.ignitionSound.pause();
+        if (window.crashSound) window.crashSound.pause();
     }
 }
 
@@ -67,18 +76,18 @@ async function loadScreen(screenName, clickedTab = null) {
 
         const tabs = document.getElementById('bottom-tabs');
         
-        // --- LOGICA AUDIO: Stop musica menu se si gioca ---
+        // --- LOGICA AUDIO NEL CARICAMENTO SCHERMATE ---
         if (screenName === 'game' || screenName === 'result') {
-            tabs.style.display = 'none';
-            menuMusic.pause(); 
+            if (tabs) tabs.style.display = 'none';
+            window.menuMusic.pause(); 
             if (screenName === 'game') initGame(); 
         } else {
-            tabs.style.display = 'flex';
+            if (tabs) tabs.style.display = 'flex';
             if (typeof stopEngine === "function") stopEngine(); 
             
-            // La musica riparte solo se l'utente ha attivato l'audio globale
+            // La musica riparte solo se l'utente l'ha attivata dal pulsante globale
             if (window.isAudioEnabled) {
-                menuMusic.play().catch(e => console.log("Audio in attesa di interazione"));
+                window.menuMusic.play().catch(e => console.log(e));
             }
         }
     } catch (error) { console.error("Errore:", error); }
