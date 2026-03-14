@@ -1,4 +1,4 @@
-// --- VARIABILI GLOBALI ---
+// --- VARIABILI GLOBALI --
 let canvas, ctx, frames = 0, gameLoopId, score = 0, isGameOver = false, isPaused = false, roadOffset = 0, totalDistance = 0, touchInitialized = false, currentGear = 1, pitchDrop = 0; 
 
 // --- AUDIO ---
