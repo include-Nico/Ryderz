@@ -2,7 +2,33 @@
 let menuMusic = new Audio('audio/menu.mp3');
 menuMusic.loop = true;
 menuMusic.volume = 0.4; 
-let isAudioEnabled = false; // Stato globale dell'audio
+
+// Variabile globale che dice se l'audio è attivo (spento di default)
+window.isAudioEnabled = false; 
+
+function toggleAudio() {
+    window.isAudioEnabled = !window.isAudioEnabled;
+    const audioBtn = document.getElementById('global-audio-btn');
+    
+    if (window.isAudioEnabled) {
+        audioBtn.innerText = '🔊'; // Cambia icona
+        
+        // Se non siamo in gioco o nel risultato, fai partire la musica del menu
+        const screensArea = document.getElementById('screens-area').innerHTML;
+        if (!screensArea.includes('screen-game') && !screensArea.includes('screen-result')) {
+            menuMusic.play().catch(e => console.log(e));
+        }
+        // Se siamo in gioco e in pausa, riattiva il motore
+        if (typeof engineSound !== 'undefined' && typeof isPaused !== 'undefined' && !isPaused && typeof isGameOver !== 'undefined' && !isGameOver) {
+            engineSound.play().catch(e=>{});
+        }
+    } else {
+        audioBtn.innerText = '🔇'; // Cambia icona in Muto
+        menuMusic.pause(); // Stoppa la musica
+        // Stoppa anche il motore in gioco se presente
+        if (typeof engineSound !== 'undefined') engineSound.pause();
+    }
+}
 
 window.onload = () => {
     loadScreen('home');
@@ -10,16 +36,6 @@ window.onload = () => {
 
 function isTouchDevice() {
     return (('ontouchstart' in window) || (navigator.maxTouchPoints > 0));
-}
-
-// Nuova funzione per attivare l'audio tramite click dell'utente
-function enableAudio() {
-    isAudioEnabled = true;
-    menuMusic.play().catch(e => console.log("Audio sbloccato"));
-    
-    // Aggiorna l'interfaccia se necessario
-    const btn = document.getElementById('btn-audio-toggle');
-    if (btn) btn.style.display = 'none'; // Nascondi il tasto dopo l'attivazione
 }
 
 async function loadScreen(screenName, clickedTab = null) {
@@ -37,10 +53,6 @@ async function loadScreen(screenName, clickedTab = null) {
                 if (isTouchDevice()) instructionsElement.innerHTML = "📱 <b>Mobile:</b> Tieni premuto per accelerare e trascina per sterzare.";
                 else instructionsElement.innerHTML = "💻 <b>PC:</b> Tieni premuto <b>W</b> (o Su) per accelerare. Usa <b>A</b> e <b>D</b> per sterzare.";
             }
-
-            // Mostra il tasto audio solo se non è ancora stato attivato
-            const btn = document.getElementById('btn-audio-toggle');
-            if (btn && isAudioEnabled) btn.style.display = 'none';
         }
 
         if (screenName === 'result') {
@@ -55,6 +67,7 @@ async function loadScreen(screenName, clickedTab = null) {
 
         const tabs = document.getElementById('bottom-tabs');
         
+        // --- LOGICA AUDIO: Stop musica menu se si gioca ---
         if (screenName === 'game' || screenName === 'result') {
             tabs.style.display = 'none';
             menuMusic.pause(); 
@@ -63,9 +76,9 @@ async function loadScreen(screenName, clickedTab = null) {
             tabs.style.display = 'flex';
             if (typeof stopEngine === "function") stopEngine(); 
             
-            // Riproduci solo se l'utente ha già attivato l'audio
-            if (isAudioEnabled) {
-                menuMusic.play().catch(e => console.log("Audio in attesa"));
+            // La musica riparte solo se l'utente ha attivato l'audio globale
+            if (window.isAudioEnabled) {
+                menuMusic.play().catch(e => console.log("Audio in attesa di interazione"));
             }
         }
     } catch (error) { console.error("Errore:", error); }
