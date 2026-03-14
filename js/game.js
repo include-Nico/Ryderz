@@ -13,7 +13,7 @@ let currentGear = 1;
 let pitchDrop = 0; 
 
 // --- AUDIO DI GIOCO ---
-const engineSound = new Audio('audio/engine.mp3');
+const engineSound = new Audio('audio/engine.wav');
 engineSound.loop = true;
 engineSound.volume = 0.5;
 engineSound.preservesPitch = false; 
