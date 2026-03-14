@@ -11,7 +11,8 @@ const player = {
     minSpeedZ: 3,   
     accelRate: 0,
     isAccelerating: false,
-    hasAcceleratedOnce: false // Capisce se hai iniziato a correre
+    hasAcceleratedOnce: false, // Capisce se hai iniziato a correre
+    shiftDelay: 0 // <--- NUOVO: Timer per il cambio marcia
 };
 
 function resetPlayer() {
@@ -20,6 +21,7 @@ function resetPlayer() {
     player.dx = 0;
     player.isAccelerating = false;
     player.hasAcceleratedOnce = false; 
+    player.shiftDelay = 0; 
     
     // Legge le statistiche dal garage
     player.speedX = playerProfile.stats.handling;
@@ -88,13 +90,20 @@ function updatePlayer() {
     if (player.x < 10) player.x = 10;
     if (player.x + player.width > canvas.width - 10) player.x = canvas.width - player.width - 10;
 
-    if (player.isAccelerating) {
-        player.hasAcceleratedOnce = true; 
-        player.speedZ += player.accelRate; 
-        if (player.speedZ > player.maxSpeedZ) player.speedZ = player.maxSpeedZ;
+    // --- LOGICA FRIZIONE E ACCELERAZIONE ---
+    if (player.shiftDelay > 0) {
+        // Se stiamo cambiando marcia, il timer scende.
+        // LA VELOCITÀ NON CAMBIA: L'auto va per inerzia mantenendo la sua velocità
+        player.shiftDelay--;
     } else {
-        player.speedZ -= 0.1; 
-        if (player.speedZ < player.minSpeedZ) player.speedZ = player.minSpeedZ;
+        if (player.isAccelerating) {
+            player.hasAcceleratedOnce = true; 
+            player.speedZ += player.accelRate; 
+            if (player.speedZ > player.maxSpeedZ) player.speedZ = player.maxSpeedZ;
+        } else {
+            player.speedZ -= 0.1; 
+            if (player.speedZ < player.minSpeedZ) player.speedZ = player.minSpeedZ;
+        }
     }
 }
 
