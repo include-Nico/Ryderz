@@ -1,6 +1,6 @@
 // --- L'AUTO DEL GIOCATORE ---
 const player = {
-    x: 0, y: 0, width: 40, height: 70, 
+    x: 0, y: 0, width: 40, height: 70, // Questa è la HITBOX reale
     speedX: 0, dx: 0, speedZ: 0, maxSpeedZ: 0, minSpeedZ: 1, 
     accelRate: 0, isAccelerating: false, hasAcceleratedOnce: false, 
     shiftDelay: 0, isIgniting: true, isStarting: false 
@@ -18,11 +18,10 @@ function resetPlayer() {
     player.isIgniting = true; 
     player.isStarting = false;
     
-    // Prende l'auto equipaggiata dal catalogo
     let currentCar = carCatalog.find(c => c.id === playerProfile.equippedCarId);
     if(!currentCar) currentCar = carCatalog[0];
 
-    playerSprite.src = currentCar.imgGame; // Carica l'immagine top-down
+    playerSprite.src = currentCar.imgGame; 
     player.speedX = currentCar.stats.handling;
     player.accelRate = currentCar.stats.acceleration;
     player.maxSpeedZ = currentCar.stats.maxSpeed;
@@ -104,15 +103,17 @@ function updatePlayer() {
 }
 
 function drawPlayer() {
-    // Disegna l'immagine dell'auto (se caricata), altrimenti un rettangolo rosso di backup
     if (playerSprite.complete && playerSprite.naturalHeight !== 0) {
-        ctx.drawImage(playerSprite, player.x, player.y, player.width, player.height);
+        // Aumentiamo leggermente la dimensione visiva rispetto alla hitbox (40x70)
+        // Disegniamo 4 px extra per lato (Totale 48x84)
+        let drawW = player.width + 8;
+        let drawH = player.height + 14;
+        ctx.drawImage(playerSprite, player.x - 4, player.y - 7, drawW, drawH);
     } else {
         ctx.fillStyle = '#ff2a2a'; 
         ctx.fillRect(player.x, player.y, player.width, player.height);
     }
     
-    // Freccia sinistra lampeggiante per l'immissione in autostrada
     if (player.isStarting && typeof frames !== 'undefined' && Math.floor(frames / 8) % 2 === 0) {
         ctx.fillStyle = '#FF9800'; 
         ctx.fillRect(player.x - 2, player.y + 2, 8, 8);
