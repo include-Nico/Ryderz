@@ -69,6 +69,7 @@ function updatePlayer() {
 
     if (player.isStarting) {
         player.speedZ += 0.015;
+        // Spostamento verso sinistra per immettersi in corsia
         if (player.speedZ > 0.4) player.x -= 0.6; 
         if (player.speedZ >= 1.0 && player.x <= canvas.width - 100) {
             player.speedZ = 1.0;
@@ -101,6 +102,17 @@ function updatePlayer() {
 function drawPlayer() {
     ctx.fillStyle = '#ff2a2a'; 
     ctx.fillRect(player.x, player.y, player.width, player.height);
+    
+    // --- FRECCIA SINISTRA LAMPEGGIANTE DURANTE L'IMMISSIONE ---
+    if (player.isStarting && typeof frames !== 'undefined' && Math.floor(frames / 8) % 2 === 0) {
+        ctx.fillStyle = '#FF9800'; // Arancione brillante per la freccia
+        // Indicatore anteriore sinistro
+        ctx.fillRect(player.x - 2, player.y + 2, 8, 8);
+        // Indicatore posteriore sinistro
+        ctx.fillRect(player.x - 2, player.y + player.height - 10, 8, 8);
+    }
+
+    // Finestrini dell'auto
     ctx.fillStyle = '#111';
     ctx.fillRect(player.x + 5, player.y + 10, player.width - 10, 15);
     ctx.fillRect(player.x + 5, player.y + 45, player.width - 10, 15);
