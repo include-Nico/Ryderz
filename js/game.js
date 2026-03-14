@@ -1,29 +1,14 @@
-// --- VARIABILI GLOBALI DI GIOCO ---
-let canvas;
-let ctx;
-let frames = 0;
-let gameLoopId;
-let score = 0;
-let isGameOver = false;
-let isPaused = false; 
-let roadOffset = 0;
-let totalDistance = 0; 
-let touchInitialized = false;
-let currentGear = 1;
-let pitchDrop = 0; 
+// --- VARIABILI GLOBALI ---
+let canvas, ctx, frames = 0, gameLoopId, score = 0, isGameOver = false, isPaused = false, roadOffset = 0, totalDistance = 0, touchInitialized = false, currentGear = 1, pitchDrop = 0; 
 
-// --- AUDIO DI GIOCO ---
-const engineSound = new Audio('audio/engine.wav');
+// --- AUDIO ---
+const ignitionSound = new Audio('audio/ignition.mp3');
+ignitionSound.volume = 1.0;
+
+const engineSound = new Audio('audio/engine.wav'); // Consigliato .wav o .ogg per loop
 engineSound.loop = true;
 engineSound.volume = 0.5;
 engineSound.preservesPitch = false; 
-
-// Trucco per LOOP PERFETTO (evita il buco di silenzio degli MP3)
-engineSound.addEventListener('timeupdate', function() {
-    if (this.duration && this.currentTime >= this.duration - 0.15) {
-        this.currentTime = 0; 
-    }
-});
 
 const crashSound = new Audio('audio/crash.mp3');
 crashSound.volume = 1.0;
@@ -32,74 +17,38 @@ function initGame() {
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
     
-    frames = 0;
-    score = 0;
-    roadOffset = 0;
-    totalDistance = 0; 
-    currentGear = 1;
-    pitchDrop = 0;
-    isGameOver = false;
-    isPaused = false; 
+    frames = 0; score = 0; roadOffset = 0; totalDistance = 0; currentGear = 1; pitchDrop = 0; isGameOver = false; isPaused = false; 
     
-    const scoreElement = document.getElementById('score');
-    if (scoreElement) scoreElement.innerText = `Punti: 0`;
-
-    const pauseMenu = document.getElementById('pause-menu');
-    if (pauseMenu) pauseMenu.style.display = 'none';
-
     resetPlayer();  
     resetTraffic(); 
+    if (!touchInitialized) { setupTouchControls(); touchInitialized = true; }
 
-    if (!touchInitialized) {
-        setupTouchControls(); 
-        touchInitialized = true;
-    }
-    
-    engineSound.playbackRate = 0.8;
-    engineSound.play().catch(e => console.log("Audio bloccato dal browser all'avvio"));
+    // --- SEQUENZA ACCENSIONE ---
+    ignitionSound.currentTime = 0;
+    ignitionSound.play().catch(e => console.log("Audio bloccato"));
+
+    // Quando finisce il suono dell'accensione, la macchina inizia a muoversi
+    ignitionSound.onended = () => {
+        player.isIgniting = false;
+        player.isStarting = true; // Inizia l'animazione da 0 a 10 km/h
+        engineSound.play();
+    };
 
     startEngine();
 }
 
-function togglePause() {
-    if (isGameOver || player.isStarting) return; 
-    
-    isPaused = !isPaused; 
-    const pauseMenu = document.getElementById('pause-menu');
-    
-    if (isPaused) {
-        if (pauseMenu) pauseMenu.style.display = 'flex';
-        player.dx = 0;
-        player.isAccelerating = false;
-        engineSound.pause(); 
-    } else {
-        if (pauseMenu) pauseMenu.style.display = 'none';
-        engineSound.play(); 
-        runGameLoop(); 
-    }
-}
-
-function quitGame() {
-    isGameOver = true;
-    isPaused = false;
-    stopEngine();
-    loadScreen('home'); 
-}
-
 function runGameLoop() {
     if (isGameOver || isPaused) return; 
-
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     updatePlayer();       
     increaseDifficulty(); 
-    
     drawRoad();           
     manageEnemies();      
     drawPlayer();         
     drawLiscioEffects();  
     
-    if (isContromano() && !player.isStarting) {
+    if (isContromano() && !player.isStarting && !player.isIgniting) {
         let alpha = 0.7 + Math.sin(frames * 0.1) * 0.3;
         ctx.fillStyle = `rgba(255, 50, 50, ${alpha})`;
         ctx.font = "bold 20px Arial";
@@ -109,14 +58,10 @@ function runGameLoop() {
     }
 
     updateScore();        
-
     totalDistance += player.speedZ; 
 
-    // --- MODULA IL PITCH DEL MOTORE ---
-    if (pitchDrop > 0) {
-        pitchDrop -= 0.03; 
-        if (pitchDrop < 0) pitchDrop = 0;
-    }
+    // Pitch motore
+    if (pitchDrop > 0) { pitchDrop -= 0.03; if (pitchDrop < 0) pitchDrop = 0; }
     let pitch = 0.8 + (player.speedZ / playerProfile.stats.maxSpeed) * 1.5 - pitchDrop;
     engineSound.playbackRate = Math.max(0.5, Math.min(pitch, 2.5));
 
@@ -125,42 +70,57 @@ function runGameLoop() {
 }
 
 function drawRoad() {
+    // Asfalto principale
     ctx.fillStyle = '#444'; 
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     roadOffset = (roadOffset + player.speedZ) % 40; 
     
+    // Spartitraffico centrale
     ctx.fillStyle = '#FFEB3B'; 
     for (let i = -40; i < canvas.height; i += 40) {
         ctx.fillRect(canvas.width / 2 - 3, i + roadOffset, 2, 20);
         ctx.fillRect(canvas.width / 2 + 1, i + roadOffset, 2, 20);
     }
     
+    // Linee corsie
     ctx.fillStyle = 'white';
     for (let i = -40; i < canvas.height; i += 40) {
         ctx.fillRect(canvas.width / 4 - 2, i + roadOffset, 4, 20); 
         ctx.fillRect((canvas.width / 4) * 3 - 2, i + roadOffset, 4, 20); 
     }
 
-    if (totalDistance < canvas.height + 800) {
+    // --- DISEGNO AREA SOS (FUORI DALLA STRADA) ---
+    // Appare solo all'inizio
+    if (totalDistance < canvas.height + 1000) {
         let sostaY = (canvas.height - 300) + totalDistance; 
         
+        // Erba/Ghiaia esterna
         ctx.fillStyle = '#222'; 
-        ctx.fillRect(canvas.width - 60, sostaY, 60, 800);
+        ctx.fillRect(canvas.width - 50, sostaY, 50, 900);
         
-        ctx.fillStyle = 'white'; 
-        for (let i = 0; i < 800; i += 40) {
-            ctx.fillRect(canvas.width - 62, sostaY + i, 4, 20);
-        }
+        // Linea bianca continua che delimita la strada (interrotta nella sosta)
+        ctx.fillStyle = 'white';
+        ctx.fillRect(canvas.width - 52, 0, 2, canvas.height); // Linea fissa
+        
+        // Copre la linea bianca dove c'è la piazzola per farla sembrare un'entrata
+        ctx.fillStyle = '#444';
+        ctx.fillRect(canvas.width - 52, sostaY + 100, 2, 700);
 
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'; 
-        ctx.font = "bold 24px Arial";
-        ctx.fillText("SOS", canvas.width - 55, sostaY + 200);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'; 
+        ctx.font = "bold 20px Arial";
+        ctx.fillText("AREA SOS", canvas.width - 48, sostaY + 300);
+    } else {
+        // Linea bianca laterale fissa quando la sosta è passata
+        ctx.fillStyle = 'white';
+        ctx.fillRect(canvas.width - 5, 0, 5, canvas.height);
+        ctx.fillRect(0, 0, 5, canvas.height);
     }
 }
 
+// Altre funzioni rimangono identiche (updateScore, triggerGameOver, etc.)
 function updateScore() {
-    if (frames % 10 === 0 && !player.isStarting && player.speedZ >= 3) {
+    if (frames % 10 === 0 && !player.isStarting && !player.isIgniting && player.speedZ >= 3) {
         let basePoints = Math.floor(player.speedZ / 3);
         score += isContromano() ? (basePoints * 2) : basePoints;
         updateScoreDisplay();
@@ -170,55 +130,43 @@ function updateScore() {
 function updateScoreDisplay() {
     const scoreElement = document.getElementById('score');
     if (scoreElement) scoreElement.innerText = `Punti: ${score}`;
-
     const speedElement = document.getElementById('speedometer');
-    const gearElement = document.getElementById('gear-display');
+    if (speedElement) speedElement.innerText = `${Math.floor(player.speedZ * 10)} km/h`;
+    
+    let visualSpeed = Math.floor(player.speedZ * 10);
+    let newGear = 1;
+    if (visualSpeed > 100) newGear = 5;
+    else if (visualSpeed > 75) newGear = 4;
+    else if (visualSpeed > 50) newGear = 3;
+    else if (visualSpeed > 35) newGear = 2;
 
-    if (speedElement && gearElement) {
-        let visualSpeed = Math.floor(player.speedZ * 10); 
-        speedElement.innerText = `${visualSpeed} km/h`;
-
-        let newGear = 1;
-        if (visualSpeed > 100) newGear = 5;
-        else if (visualSpeed > 75) newGear = 4;
-        else if (visualSpeed > 50) newGear = 3;
-        else if (visualSpeed > 35) newGear = 2;
-
-        if (newGear > currentGear) {
-            // IL SUONO NON SI SPEZZA PIÙ, abbassiamo solo l'accelerazione per simulare il calo di giri!
-            player.shiftDelay = 15; 
-            pitchDrop = 0.6; 
-        }
-        currentGear = newGear; 
-
-        gearElement.innerText = `Marcia: ${currentGear}`;
+    if (newGear > currentGear) {
+        player.shiftDelay = 15; 
+        pitchDrop = 0.6; 
     }
+    currentGear = newGear;
+    const gearElement = document.getElementById('gear-display');
+    if (gearElement) gearElement.innerText = `Marcia: ${currentGear}`;
+}
+
+function togglePause() {
+    if (isGameOver || player.isStarting || player.isIgniting) return;
+    isPaused = !isPaused;
+    const pm = document.getElementById('pause-menu');
+    if (isPaused) { pm.style.display = 'flex'; engineSound.pause(); }
+    else { pm.style.display = 'none'; engineSound.play(); runGameLoop(); }
 }
 
 function triggerGameOver() {
     isGameOver = true;
-    
     engineSound.pause(); 
     crashSound.currentTime = 0;
     crashSound.play().catch(e => {});
-
     stopEngine();
-    
-    let cashEarned = Math.floor(score / 5); 
-    addBanknotes(cashEarned); 
-    
-    window.lastScore = score;
-    window.lastCash = cashEarned;
-    
-    setTimeout(() => {
-        loadScreen('result');
-    }, 800);
+    addBanknotes(Math.floor(score / 5)); 
+    window.lastScore = score; window.lastCash = Math.floor(score / 5);
+    setTimeout(() => { loadScreen('result'); }, 800);
 }
 
 function startEngine() { runGameLoop(); }
-
-function stopEngine() {
-    cancelAnimationFrame(gameLoopId);
-    engineSound.pause(); 
-    if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height); 
-}
+function stopEngine() { cancelAnimationFrame(gameLoopId); engineSound.pause(); }
