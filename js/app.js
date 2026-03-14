@@ -1,4 +1,4 @@
-// --- GESTIONE AUDIO MENU ---
+// --- GESTIONE AUDIO MENU GLOBALE ---
 window.menuMusic = new Audio('audio/menu.mp3');
 window.menuMusic.loop = true;
 window.menuMusic.volume = 0.4; 
@@ -12,26 +12,26 @@ function toggleAudio() {
     
     if (window.isAudioEnabled) {
         audioBtn.innerHTML = '🔊'; 
-        audioBtn.style.borderColor = '#00F0FF';
+        audioBtn.style.borderColor = '#00F0FF'; // Ciano se acceso
         audioBtn.style.boxShadow = '0 0 15px rgba(0,240,255,0.5)';
         
-        // Controlliamo in che schermata siamo per attivare l'audio giusto
+        // Verifica in che schermata siamo
         const screensArea = document.getElementById('screens-area').innerHTML;
         if (screensArea.includes('screen-game')) {
-            // Se siamo in gioco e non in pausa, fai partire il motore
+            // Se in gioco e non in pausa, fa partire il motore
             if (window.engineSound && typeof isPaused !== 'undefined' && !isPaused && typeof isGameOver !== 'undefined' && !isGameOver) {
                 window.engineSound.play().catch(e=>{});
             }
         } else if (!screensArea.includes('screen-result')) {
-            // Se siamo nel menu o nel garage, fai partire la musica del menu
+            // Se nel menu, fa partire la musica
             window.menuMusic.play().catch(e => console.log(e));
         }
     } else {
         audioBtn.innerHTML = '🔇'; 
-        audioBtn.style.borderColor = '#FF6A00';
+        audioBtn.style.borderColor = '#FF6A00'; // Arancione se spento
         audioBtn.style.boxShadow = '0 0 15px rgba(255,106,0,0.5)';
         
-        // Muta tutto
+        // Ferma qualsiasi suono attivo
         window.menuMusic.pause(); 
         if (window.engineSound) window.engineSound.pause();
         if (window.ignitionSound) window.ignitionSound.pause();
@@ -76,7 +76,7 @@ async function loadScreen(screenName, clickedTab = null) {
 
         const tabs = document.getElementById('bottom-tabs');
         
-        // --- LOGICA AUDIO NEL CARICAMENTO SCHERMATE ---
+        // --- LOGICA CAMBIO SCHERMATE ---
         if (screenName === 'game' || screenName === 'result') {
             if (tabs) tabs.style.display = 'none';
             window.menuMusic.pause(); 
@@ -85,7 +85,7 @@ async function loadScreen(screenName, clickedTab = null) {
             if (tabs) tabs.style.display = 'flex';
             if (typeof stopEngine === "function") stopEngine(); 
             
-            // La musica riparte solo se l'utente l'ha attivata dal pulsante globale
+            // La musica riparte solo se l'utente ha attivato l'audio globale
             if (window.isAudioEnabled) {
                 window.menuMusic.play().catch(e => console.log(e));
             }
