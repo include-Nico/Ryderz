@@ -17,16 +17,10 @@ const carCatalog = [
     }
 ];
 
-// Inizializzazione profilo V4 per supportare i livelli officina
 function getProfile() {
     let profile = JSON.parse(localStorage.getItem('ryderzProfileV4'));
     if (!profile) {
-        profile = {
-            banknotes: 0,
-            unlockedCars: [1], 
-            equippedCarId: 1,
-            upgrades: {} // Struttura: { carId: { speed: 0, handling: 0, accel: 0 } }
-        };
+        profile = { banknotes: 0, unlockedCars: [1], equippedCarId: 1, upgrades: {} };
         localStorage.setItem('ryderzProfileV4', JSON.stringify(profile));
     }
     return profile;
@@ -132,6 +126,13 @@ function applyUpgrade(carId, type, cost) {
         window.playerProfile.banknotes -= cost;
         window.playerProfile.upgrades[carId][type]++;
         saveProfile();
+        
+        // --- EFFETTO FLASH ---
+        const workshop = document.getElementById('g-workshop-section');
+        workshop.classList.remove('flash-upgrade');
+        void workshop.offsetWidth; // Trigger reflow per riavviare l'animazione
+        workshop.classList.add('flash-upgrade');
+        
         updateGarageUI();
     } else {
         alert("💵 Banconote insufficienti!");
