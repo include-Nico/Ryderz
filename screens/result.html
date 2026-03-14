@@ -1,10 +1,13 @@
-<section id="screen-result" class="screen active" style="background:radial-gradient(ellipse at 50% 20%,rgba(255,0,110,.15) 0%,transparent 60%),var(--bg-void);">
+<section id="screen-result" class="screen active"
+         style="background: radial-gradient(ellipse at 50% 20%,
+                    rgba(255,32,87,0.12) 0%, transparent 60%),
+                var(--bg-void);">
 
     <h1 class="result-crash-title">💥 INCIDENTE 💥</h1>
 
     <div class="result-card">
         <p class="result-label">Punteggio finale</p>
-        <p class="result-score-value"><strong id="result-score">0</strong></p>
+        <p class="result-score-value"><span id="result-score">0</span></p>
 
         <hr class="result-divider">
 
@@ -12,6 +15,11 @@
         <p class="result-cash-value">💵 +<span id="result-cash">0</span></p>
     </div>
 
-    <button class="play-btn" onclick="loadScreen('home')">← MENU PRINCIPALE</button>
+    <button class="play-btn" onclick="loadScreen('home')" style="margin-bottom: 14px;">
+         MENU PRINCIPALE
+    </button>
+    <button class="play-btn success" onclick="loadScreen('game')" style="font-size:13px;">
+        🔄 RIPROVA
+    </button>
 
 </section>
