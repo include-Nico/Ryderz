@@ -17,26 +17,36 @@ const carCatalog = [
     }
 ];
 
-// Caricamento del profilo (V3 per supportare il nuovo sistema auto)
-let playerProfile = JSON.parse(localStorage.getItem('ryderzProfileV3')) || {
-    banknotes: 0,
-    unlockedCars: [1], 
-    equippedCarId: 1
-};
+// Funzione per caricare il profilo in modo sicuro
+function getProfile() {
+    let profile = JSON.parse(localStorage.getItem('ryderzProfileV3'));
+    if (!profile) {
+        profile = {
+            banknotes: 0,
+            unlockedCars: [1], 
+            equippedCarId: 1
+        };
+        localStorage.setItem('ryderzProfileV3', JSON.stringify(profile));
+    }
+    return profile;
+}
+
+window.playerProfile = getProfile();
 
 function saveProfile() {
-    localStorage.setItem('ryderzProfileV3', JSON.stringify(playerProfile));
+    localStorage.setItem('ryderzProfileV3', JSON.stringify(window.playerProfile));
 }
 
 function addBanknotes(amount) {
-    playerProfile.banknotes += amount;
+    window.playerProfile.banknotes += amount;
     saveProfile();
 }
 
 let currentViewIndex = 0;
 
 function initGarage() {
-    currentViewIndex = carCatalog.findIndex(c => c.id === playerProfile.equippedCarId);
+    window.playerProfile = getProfile(); // Ricarica per sicurezza
+    currentViewIndex = carCatalog.findIndex(c => c.id === window.playerProfile.equippedCarId);
     if(currentViewIndex === -1) currentViewIndex = 0;
     updateGarageUI();
 }
@@ -50,10 +60,12 @@ function changeCar(direction) {
 
 function updateGarageUI() {
     const car = carCatalog[currentViewIndex];
-    const isUnlocked = playerProfile.unlockedCars.includes(car.id);
-    const isEquipped = playerProfile.equippedCarId === car.id;
+    // FIX: Usiamo window.playerProfile per essere sicuri che esista
+    const profile = window.playerProfile;
+    
+    const isUnlocked = profile.unlockedCars && profile.unlockedCars.includes(car.id);
+    const isEquipped = profile.equippedCarId === car.id;
 
-    // Aggiorna l'immagine e i testi
     const imgEl = document.getElementById('g-car-img');
     if (imgEl) imgEl.src = car.imgGarage;
     
@@ -86,18 +98,18 @@ function updateGarageUI() {
 }
 
 function equipCar(carId) {
-    playerProfile.equippedCarId = carId;
+    window.playerProfile.equippedCarId = carId;
     saveProfile();
     updateGarageUI();
 }
 
 function buyCar(carId, price) {
-    if (playerProfile.banknotes >= price) {
-        playerProfile.banknotes -= price;
-        playerProfile.unlockedCars.push(carId);
+    if (window.playerProfile.banknotes >= price) {
+        window.playerProfile.banknotes -= price;
+        window.playerProfile.unlockedCars.push(carId);
         equipCar(carId);
         const moneyEl = document.getElementById('home-banknotes');
-        if (moneyEl) moneyEl.innerText = playerProfile.banknotes;
+        if (moneyEl) moneyEl.innerText = window.playerProfile.banknotes;
     } else {
         alert("💵 Soldi insufficienti!");
     }
