@@ -1,5 +1,5 @@
-// --- VARIABILI GLOBALI --
-let canvas, ctx, frames = 0, gameLoopId, score = 0, isGameOver = false, isPaused = false, roadOffset = 0, totalDistance = 0, currentGear = 1, pitchDrop = 0; 
+// --- VARIABILI GLOBALI -- (Non toccare, prevengono conflitti con traffic.js e player.js)
+let canvas, ctx, frames = 0, gameLoopId, score = 0, isGameOver = false, isPaused = false, roadOffset = 0, totalDistance = 0, touchInitialized = false, currentGear = 1, pitchDrop = 0; 
 
 // --- AUDIO GLOBALE GIOCO ---
 window.ignitionSound = new Audio('audio/ignition.mp3');
@@ -19,10 +19,10 @@ function initGame() {
     resetPlayer();  
     resetTraffic(); 
     
-    // Ricarichiamo SEMPRE i controlli touch, altrimenti dalla seconda partita smettono di funzionare!
+    // Ricarichiamo SEMPRE i controlli touch per evitare blocchi su mobile dopo la prima partita
     setupTouchControls(); 
 
-    // Controllo Audio per l'accensione
+    // Controllo Audio per l'accensione basato sul pulsante globale
     if (window.isAudioEnabled) {
         window.ignitionSound.currentTime = 0;
         window.ignitionSound.play().catch(e => console.log(e));
