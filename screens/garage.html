@@ -1,75 +1,121 @@
-<section id="screen-garage" class="screen active" style="justify-content: flex-start; padding-top: 20px;">
+<section id="screen-garage" class="screen active"
+         style="justify-content: flex-start; overflow-y: auto; padding: 20px 0 24px;">
 
     <div class="home-money-badge" style="position: static; margin-bottom: 15px;">
         💵 <span id="home-banknotes">0</span>
     </div>
 
-    <div class="garage-container" style="width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 15px;">
-        
-        <div style="background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border-dim); padding: 20px; text-align: center; position: relative;">
+    <div class="garage-container"
+         style="width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 15px;">
+
+        <!-- Card auto -->
+        <div style="background: var(--bg-card); border-radius: 16px;
+                    border: 1px solid var(--border-dim); padding: 20px;
+                    text-align: center; position: relative;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <button onclick="changeCar(-1)" style="background:none; border:none; color:var(--neon-cyan); font-size:24px; cursor:pointer;">◀</button>
-                <img id="g-car-img" src="" style="height: 100px; filter: drop-shadow(0 0 15px rgba(0,240,255,0.3));">
-                <button onclick="changeCar(1)" style="background:none; border:none; color:var(--neon-cyan); font-size:24px; cursor:pointer;">▶</button>
+                <button onclick="changeCar(-1)"
+                        style="background:none; border:none; color:var(--neon-cyan);
+                               font-size:24px; cursor:pointer; padding:8px;">◀</button>
+                <img id="g-car-img" src="" alt="Auto"
+                     style="height:100px; filter: drop-shadow(0 0 15px rgba(0,240,255,0.3));">
+                <button onclick="changeCar(1)"
+                        style="background:none; border:none; color:var(--neon-cyan);
+                               font-size:24px; cursor:pointer; padding:8px;">▶</button>
             </div>
-            <h2 id="g-car-name" style="font-family:'Orbitron'; color: var(--neon-cyan); margin-top: 10px;">CAR NAME</h2>
-            <p id="g-car-status" style="font-size: 12px; letter-spacing: 2px;">STATUS</p>
+            <h2 id="g-car-name"
+                style="font-family:'Orbitron'; color: var(--neon-cyan); margin-top: 10px; font-size:16px;">
+                CAR NAME
+            </h2>
+            <p id="g-car-status"
+               style="font-size: 12px; letter-spacing: 2px; margin-top: 4px; color: var(--text-muted);">
+                STATUS
+            </p>
         </div>
 
+        <!-- Sezione acquisto -->
         <div id="g-buy-section" style="display:none; text-align: center;">
-            <button id="g-buy-btn" class="play-btn success" style="width: 100%;">ACQUISTA</button>
+            <button id="g-buy-btn" class="play-btn" style="width: 100%;">ACQUISTA</button>
         </div>
 
-        <div id="g-workshop-section" style="display:none; background: var(--bg-panel); border-radius: 16px; padding: 20px; border: 2px solid var(--neon-orange); transition: all 0.2s;">
-            <h3 style="font-family:'Orbitron'; font-size: 14px; color: var(--neon-orange); margin-bottom: 15px; text-align: center;">🔧 OFFICINA POTENZIAMENTI</h3>
-            
+        <!-- Officina -->
+        <div id="g-workshop-section"
+             style="display:none; background: var(--bg-panel); border-radius: 16px;
+                    padding: 20px; border: 2px solid var(--neon-orange); transition: all 0.2s;">
+            <h3 style="font-family:'Orbitron'; font-size:13px; color: var(--neon-orange);
+                        margin-bottom: 15px; text-align: center; letter-spacing: 0.1em;">
+                🔧 OFFICINA POTENZIAMENTI
+            </h3>
+
             <div style="display: flex; flex-direction: column; gap: 16px;">
+
+                <!-- VELOCITÀ -->
                 <div class="stat-row">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                        <span style="font-size: 11px; color: var(--text-muted); letter-spacing: 1px;">VELOCITÀ MAX</span>
-                        <span id="lvl-speed" style="font-size: 11px; font-family: 'Orbitron'; color: var(--neon-orange);">0/5</span>
+                        <span style="font-size:11px; color:var(--text-muted); letter-spacing:1px;">VELOCITÀ MAX</span>
+                        <span id="lvl-speed"
+                              style="font-size:11px; font-family:'Orbitron'; color:var(--neon-orange);">0/5</span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="flex-grow: 1; height: 6px; background: #111; border-radius: 3px; overflow: hidden;">
-                            <div id="bar-speed" style="width: 0%; height: 100%; background: var(--neon-orange); box-shadow: 0 0 10px var(--neon-orange); transition: width 0.3s;"></div>
+                        <div style="flex-grow:1; height:6px; background:#111; border-radius:3px; overflow:hidden;">
+                            <div id="bar-speed"
+                                 style="width:0%; height:100%; background:var(--neon-orange);
+                                        box-shadow:0 0 10px var(--neon-orange); transition:width 0.3s;"></div>
                         </div>
-                        <button id="btn-up-speed" class="play-btn secondary" style="padding: 6px 10px; font-size: 10px; min-width: 80px;">UP</button>
+                        <button id="btn-up-speed" class="play-btn secondary"
+                                style="padding:6px 10px; font-size:10px; min-width:90px; white-space:nowrap;">
+                            UP
+                        </button>
                     </div>
                 </div>
 
+                <!-- STERZATA -->
                 <div class="stat-row">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                        <span style="font-size: 11px; color: var(--text-muted); letter-spacing: 1px;">STERZATA</span>
-                        <span id="lvl-handling" style="font-size: 11px; font-family: 'Orbitron'; color: var(--neon-orange);">0/5</span>
+                        <span style="font-size:11px; color:var(--text-muted); letter-spacing:1px;">STERZATA</span>
+                        <span id="lvl-handling"
+                              style="font-size:11px; font-family:'Orbitron'; color:var(--neon-orange);">0/5</span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="flex-grow: 1; height: 6px; background: #111; border-radius: 3px; overflow: hidden;">
-                            <div id="bar-handling" style="width: 0%; height: 100%; background: var(--neon-orange); box-shadow: 0 0 10px var(--neon-orange); transition: width 0.3s;"></div>
+                        <div style="flex-grow:1; height:6px; background:#111; border-radius:3px; overflow:hidden;">
+                            <div id="bar-handling"
+                                 style="width:0%; height:100%; background:var(--neon-orange);
+                                        box-shadow:0 0 10px var(--neon-orange); transition:width 0.3s;"></div>
                         </div>
-                        <button id="btn-up-handling" class="play-btn secondary" style="padding: 6px 10px; font-size: 10px; min-width: 80px;">UP</button>
+                        <button id="btn-up-handling" class="play-btn secondary"
+                                style="padding:6px 10px; font-size:10px; min-width:90px; white-space:nowrap;">
+                            UP
+                        </button>
                     </div>
                 </div>
 
+                <!-- ACCELERAZIONE -->
                 <div class="stat-row">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                        <span style="font-size: 11px; color: var(--text-muted); letter-spacing: 1px;">ACCELERAZIONE</span>
-                        <span id="lvl-accel" style="font-size: 11px; font-family: 'Orbitron'; color: var(--neon-orange);">0/5</span>
+                        <span style="font-size:11px; color:var(--text-muted); letter-spacing:1px;">ACCELERAZIONE</span>
+                        <span id="lvl-accel"
+                              style="font-size:11px; font-family:'Orbitron'; color:var(--neon-orange);">0/5</span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="flex-grow: 1; height: 6px; background: #111; border-radius: 3px; overflow: hidden;">
-                            <div id="bar-accel" style="width: 0%; height: 100%; background: var(--neon-orange); box-shadow: 0 0 10px var(--neon-orange); transition: width 0.3s;"></div>
+                        <div style="flex-grow:1; height:6px; background:#111; border-radius:3px; overflow:hidden;">
+                            <div id="bar-accel"
+                                 style="width:0%; height:100%; background:var(--neon-orange);
+                                        box-shadow:0 0 10px var(--neon-orange); transition:width 0.3s;"></div>
                         </div>
-                        <button id="btn-up-accel" class="play-btn secondary" style="padding: 6px 10px; font-size: 10px; min-width: 80px;">UP</button>
+                        <button id="btn-up-accel" class="play-btn secondary"
+                                style="padding:6px 10px; font-size:10px; min-width:90px; white-space:nowrap;">
+                            UP
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <button id="g-equip-btn" class="play-btn" onclick="equipCar()" style="width: 100%; margin-top: 20px; font-size: 13px;">SELEZIONA AUTO</button>
+            <button id="g-equip-btn" class="play-btn"
+                    onclick="equipCar()"
+                    style="width:100%; margin-top:20px; font-size:13px;">
+                SELEZIONA AUTO
+            </button>
         </div>
-    </div>
 
-    <script>
-        if (typeof initGarage === 'function') initGarage();
-        else setTimeout(initGarage, 100);
-    </script>
+    </div>
+    <!-- ⚠️ Nessuno script inline: initGarage è chiamato da app.js -->
 </section>
