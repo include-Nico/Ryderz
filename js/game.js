@@ -7,7 +7,7 @@ let score = 0;
 let isGameOver = false;
 let isPaused = false; 
 let roadOffset = 0;
-let totalDistance = 0; // Nuova: Tiene traccia dello spazio percorso
+let totalDistance = 0; 
 let touchInitialized = false;
 let currentGear = 1;
 let pitchDrop = 0; 
@@ -17,6 +17,13 @@ const engineSound = new Audio('audio/engine.mp3');
 engineSound.loop = true;
 engineSound.volume = 0.5;
 engineSound.preservesPitch = false; 
+
+// Trucco per LOOP PERFETTO (evita il buco di silenzio degli MP3)
+engineSound.addEventListener('timeupdate', function() {
+    if (this.duration && this.currentTime >= this.duration - 0.15) {
+        this.currentTime = 0; 
+    }
+});
 
 const crashSound = new Audio('audio/crash.mp3');
 crashSound.volume = 1.0;
@@ -28,7 +35,7 @@ function initGame() {
     frames = 0;
     score = 0;
     roadOffset = 0;
-    totalDistance = 0; // Azzera la distanza per far riapparire l'area di sosta
+    totalDistance = 0; 
     currentGear = 1;
     pitchDrop = 0;
     isGameOver = false;
@@ -55,7 +62,7 @@ function initGame() {
 }
 
 function togglePause() {
-    if (isGameOver || player.isStarting) return; // Niente pausa durante il filmato iniziale
+    if (isGameOver || player.isStarting) return; 
     
     isPaused = !isPaused; 
     const pauseMenu = document.getElementById('pause-menu');
@@ -92,7 +99,6 @@ function runGameLoop() {
     drawPlayer();         
     drawLiscioEffects();  
     
-    // Niente scritte mentre fai l'animazione di partenza
     if (isContromano() && !player.isStarting) {
         let alpha = 0.7 + Math.sin(frames * 0.1) * 0.3;
         ctx.fillStyle = `rgba(255, 50, 50, ${alpha})`;
@@ -104,7 +110,7 @@ function runGameLoop() {
 
     updateScore();        
 
-    totalDistance += player.speedZ; // Aumenta i metri percorsi
+    totalDistance += player.speedZ; 
 
     // --- MODULA IL PITCH DEL MOTORE ---
     if (pitchDrop > 0) {
@@ -136,26 +142,24 @@ function drawRoad() {
         ctx.fillRect((canvas.width / 4) * 3 - 2, i + roadOffset, 4, 20); 
     }
 
-    // --- DISEGNO AREA DI SOSTA (Scompare man mano che si avanza) ---
     if (totalDistance < canvas.height + 800) {
-        let sostaY = (canvas.height - 300) + totalDistance; // Scorre verso il basso
+        let sostaY = (canvas.height - 300) + totalDistance; 
         
-        ctx.fillStyle = '#222'; // Asfalto più scuro per l'emergenza
+        ctx.fillStyle = '#222'; 
         ctx.fillRect(canvas.width - 60, sostaY, 60, 800);
         
-        ctx.fillStyle = 'white'; // Linea tratteggiata di immissione
+        ctx.fillStyle = 'white'; 
         for (let i = 0; i < 800; i += 40) {
             ctx.fillRect(canvas.width - 62, sostaY + i, 4, 20);
         }
 
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'; // Scritta a terra
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'; 
         ctx.font = "bold 24px Arial";
         ctx.fillText("SOS", canvas.width - 55, sostaY + 200);
     }
 }
 
 function updateScore() {
-    // Il punteggio si ferma se la macchina sta partendo per evitare abusi
     if (frames % 10 === 0 && !player.isStarting && player.speedZ >= 3) {
         let basePoints = Math.floor(player.speedZ / 3);
         score += isContromano() ? (basePoints * 2) : basePoints;
@@ -181,7 +185,7 @@ function updateScoreDisplay() {
         else if (visualSpeed > 35) newGear = 2;
 
         if (newGear > currentGear) {
-            engineSound.currentTime = 0; 
+            // IL SUONO NON SI SPEZZA PIÙ, abbassiamo solo l'accelerazione per simulare il calo di giri!
             player.shiftDelay = 15; 
             pitchDrop = 0.6; 
         }
