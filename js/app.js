@@ -1,4 +1,4 @@
-// --- GESTIONE AUDIO MENU ---
+// --- GESTIONE AUDIO MENU --
 let menuMusic = new Audio('audio/menu.mp3');
 menuMusic.loop = true;
 menuMusic.volume = 0.4; 
