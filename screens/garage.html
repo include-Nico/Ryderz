@@ -23,31 +23,48 @@
         <div id="g-workshop-section" style="display:none; background: var(--bg-panel); border-radius: 16px; padding: 20px; border: 1px solid var(--neon-orange);">
             <h3 style="font-family:'Orbitron'; font-size: 14px; color: var(--neon-orange); margin-bottom: 15px; text-align: center;">🔧 OFFICINA POTENZIAMENTI</h3>
             
-            <div style="display: flex; flex-direction: column; gap: 12px;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <p style="font-size: 12px; color: var(--text-muted);">VELOCITÀ MAX</p>
-                        <p id="lvl-speed" style="font-size: 14px; font-family: 'Orbitron';">Lvl 0/5</p>
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div class="stat-row">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span style="font-size: 11px; color: var(--text-muted); letter-spacing: 1px;">VELOCITÀ MAX</span>
+                        <span id="lvl-speed" style="font-size: 11px; font-family: 'Orbitron'; color: var(--neon-orange);">0/5</span>
                     </div>
-                    <button id="btn-up-speed" class="play-btn secondary" style="padding: 8px 15px; font-size: 11px;">UP 💵 1000</button>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="flex-grow: 1; height: 6px; background: #111; border-radius: 3px; overflow: hidden;">
+                            <div id="bar-speed" style="width: 0%; height: 100%; background: var(--neon-orange); box-shadow: 0 0 10px var(--neon-orange); transition: width 0.3s;"></div>
+                        </div>
+                        <button id="btn-up-speed" class="play-btn secondary" style="padding: 6px 10px; font-size: 10px; min-width: 80px;">UP</button>
+                    </div>
                 </div>
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <p style="font-size: 12px; color: var(--text-muted);">STERZATA</p>
-                        <p id="lvl-handling" style="font-size: 14px; font-family: 'Orbitron';">Lvl 0/5</p>
+
+                <div class="stat-row">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span style="font-size: 11px; color: var(--text-muted); letter-spacing: 1px;">STERZATA</span>
+                        <span id="lvl-handling" style="font-size: 11px; font-family: 'Orbitron'; color: var(--neon-orange);">0/5</span>
                     </div>
-                    <button id="btn-up-handling" class="play-btn secondary" style="padding: 8px 15px; font-size: 11px;">UP 💵 1000</button>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="flex-grow: 1; height: 6px; background: #111; border-radius: 3px; overflow: hidden;">
+                            <div id="bar-handling" style="width: 0%; height: 100%; background: var(--neon-orange); box-shadow: 0 0 10px var(--neon-orange); transition: width 0.3s;"></div>
+                        </div>
+                        <button id="btn-up-handling" class="play-btn secondary" style="padding: 6px 10px; font-size: 10px; min-width: 80px;">UP</button>
+                    </div>
                 </div>
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <p style="font-size: 12px; color: var(--text-muted);">ACCELERAZIONE</p>
-                        <p id="lvl-accel" style="font-size: 14px; font-family: 'Orbitron';">Lvl 0/5</p>
+
+                <div class="stat-row">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span style="font-size: 11px; color: var(--text-muted); letter-spacing: 1px;">ACCELERAZIONE</span>
+                        <span id="lvl-accel" style="font-size: 11px; font-family: 'Orbitron'; color: var(--neon-orange);">0/5</span>
                     </div>
-                    <button id="btn-up-accel" class="play-btn secondary" style="padding: 8px 15px; font-size: 11px;">UP 💵 1000</button>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="flex-grow: 1; height: 6px; background: #111; border-radius: 3px; overflow: hidden;">
+                            <div id="bar-accel" style="width: 0%; height: 100%; background: var(--neon-orange); box-shadow: 0 0 10px var(--neon-orange); transition: width 0.3s;"></div>
+                        </div>
+                        <button id="btn-up-accel" class="play-btn secondary" style="padding: 6px 10px; font-size: 10px; min-width: 80px;">UP</button>
+                    </div>
                 </div>
             </div>
 
-            <button id="g-equip-btn" class="play-btn" onclick="equipCar()" style="width: 100%; margin-top: 15px; font-size: 14px;">SELEZIONA AUTO</button>
+            <button id="g-equip-btn" class="play-btn" onclick="equipCar()" style="width: 100%; margin-top: 20px; font-size: 13px;">SELEZIONA AUTO</button>
         </div>
     </div>
 
