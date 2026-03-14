@@ -1,4 +1,4 @@
-// --- L'AUTO DEL GIOCATORE --
+// --- L'AUTO DEL GIOCATORE ---
 const player = {
     x: 0, y: 0, width: 40, height: 70, 
     speedX: 0, dx: 0, speedZ: 0, maxSpeedZ: 0, minSpeedZ: 1, 
