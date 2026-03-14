@@ -7,9 +7,10 @@ let score = 0;
 let isGameOver = false;
 let isPaused = false; 
 let roadOffset = 0;
+let totalDistance = 0; // Nuova: Tiene traccia dello spazio percorso
 let touchInitialized = false;
 let currentGear = 1;
-let pitchDrop = 0; // Nuova variabile per calo giri motore
+let pitchDrop = 0; 
 
 // --- AUDIO DI GIOCO ---
 const engineSound = new Audio('audio/engine.mp3');
@@ -27,6 +28,7 @@ function initGame() {
     frames = 0;
     score = 0;
     roadOffset = 0;
+    totalDistance = 0; // Azzera la distanza per far riapparire l'area di sosta
     currentGear = 1;
     pitchDrop = 0;
     isGameOver = false;
@@ -53,7 +55,7 @@ function initGame() {
 }
 
 function togglePause() {
-    if (isGameOver) return; 
+    if (isGameOver || player.isStarting) return; // Niente pausa durante il filmato iniziale
     
     isPaused = !isPaused; 
     const pauseMenu = document.getElementById('pause-menu');
@@ -90,7 +92,8 @@ function runGameLoop() {
     drawPlayer();         
     drawLiscioEffects();  
     
-    if (isContromano()) {
+    // Niente scritte mentre fai l'animazione di partenza
+    if (isContromano() && !player.isStarting) {
         let alpha = 0.7 + Math.sin(frames * 0.1) * 0.3;
         ctx.fillStyle = `rgba(255, 50, 50, ${alpha})`;
         ctx.font = "bold 20px Arial";
@@ -101,9 +104,11 @@ function runGameLoop() {
 
     updateScore();        
 
+    totalDistance += player.speedZ; // Aumenta i metri percorsi
+
     // --- MODULA IL PITCH DEL MOTORE ---
     if (pitchDrop > 0) {
-        pitchDrop -= 0.03; // I giri del motore risalgono gradualmente dopo la cambiata
+        pitchDrop -= 0.03; 
         if (pitchDrop < 0) pitchDrop = 0;
     }
     let pitch = 0.8 + (player.speedZ / playerProfile.stats.maxSpeed) * 1.5 - pitchDrop;
@@ -130,10 +135,28 @@ function drawRoad() {
         ctx.fillRect(canvas.width / 4 - 2, i + roadOffset, 4, 20); 
         ctx.fillRect((canvas.width / 4) * 3 - 2, i + roadOffset, 4, 20); 
     }
+
+    // --- DISEGNO AREA DI SOSTA (Scompare man mano che si avanza) ---
+    if (totalDistance < canvas.height + 800) {
+        let sostaY = (canvas.height - 300) + totalDistance; // Scorre verso il basso
+        
+        ctx.fillStyle = '#222'; // Asfalto più scuro per l'emergenza
+        ctx.fillRect(canvas.width - 60, sostaY, 60, 800);
+        
+        ctx.fillStyle = 'white'; // Linea tratteggiata di immissione
+        for (let i = 0; i < 800; i += 40) {
+            ctx.fillRect(canvas.width - 62, sostaY + i, 4, 20);
+        }
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'; // Scritta a terra
+        ctx.font = "bold 24px Arial";
+        ctx.fillText("SOS", canvas.width - 55, sostaY + 200);
+    }
 }
 
 function updateScore() {
-    if (frames % 10 === 0) {
+    // Il punteggio si ferma se la macchina sta partendo per evitare abusi
+    if (frames % 10 === 0 && !player.isStarting && player.speedZ >= 3) {
         let basePoints = Math.floor(player.speedZ / 3);
         score += isContromano() ? (basePoints * 2) : basePoints;
         updateScoreDisplay();
@@ -157,11 +180,10 @@ function updateScoreDisplay() {
         else if (visualSpeed > 50) newGear = 3;
         else if (visualSpeed > 35) newGear = 2;
 
-        // --- SIMULAZIONE CAMBIO MARCIA (FRIZIONE) ---
         if (newGear > currentGear) {
-            engineSound.currentTime = 0; // Spezza l'audio
-            player.shiftDelay = 15; // Mantiene la velocità costante per 1/4 di secondo (15 frame) senza accelerare
-            pitchDrop = 0.6; // Simula il crollo dei giri motore (RPM)
+            engineSound.currentTime = 0; 
+            player.shiftDelay = 15; 
+            pitchDrop = 0.6; 
         }
         currentGear = newGear; 
 
