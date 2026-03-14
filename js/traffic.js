@@ -142,18 +142,19 @@ function manageEnemies() {
             }
         }
 
-        // DISEGNO AUTO NEMICA (Ridisegnata più grande visivamente)
+        // DISEGNO AUTO NEMICA (Visuale 56x98)
         if (e.sprite && e.sprite.complete && e.sprite.naturalHeight !== 0) {
-            let drawW = e.width + 8;
-            let drawH = e.height + 14;
+            let drawW = e.width + 16;
+            let drawH = e.height + 28;
             if (e.isOncoming) {
                 ctx.save();
                 ctx.translate(e.x + e.width/2, e.y + e.height/2);
                 ctx.rotate(Math.PI); 
+                // Disegno centrato rispetto alla hitbox reale
                 ctx.drawImage(e.sprite, -drawW/2, -drawH/2, drawW, drawH);
                 ctx.restore();
             } else {
-                ctx.drawImage(e.sprite, e.x - 4, e.y - 7, drawW, drawH);
+                ctx.drawImage(e.sprite, e.x - 8, e.y - 14, drawW, drawH);
             }
         } else {
             ctx.fillStyle = e.colorBackup;
