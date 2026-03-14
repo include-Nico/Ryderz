@@ -11,29 +11,32 @@ const player = {
     minSpeedZ: 3,   
     accelRate: 0,
     isAccelerating: false,
-    hasAcceleratedOnce: false, // Capisce se hai iniziato a correre
-    shiftDelay: 0 // <--- NUOVO: Timer per il cambio marcia
+    hasAcceleratedOnce: false, 
+    shiftDelay: 0, 
+    isStarting: true // <--- NUOVO: Modalità Partenza Automatica
 };
 
 function resetPlayer() {
-    player.x = canvas.width / 2 + 10; 
+    // La macchina parte tutta a destra nell'area di sosta
+    player.x = canvas.width - 50; 
     player.y = canvas.height - 120;
     player.dx = 0;
     player.isAccelerating = false;
     player.hasAcceleratedOnce = false; 
     player.shiftDelay = 0; 
+    player.isStarting = true; // Attiva l'animazione di avvio
     
-    // Legge le statistiche dal garage
     player.speedX = playerProfile.stats.handling;
     player.accelRate = playerProfile.stats.acceleration;
     player.maxSpeedZ = playerProfile.stats.maxSpeed;
-    player.speedZ = player.minSpeedZ; 
+    player.speedZ = 0; // Parte da 0 km/h!
+    player.minSpeedZ = 3; 
 }
 
 // --- COMANDI DA TASTIERA (PC) ---
 document.addEventListener('keydown', (e) => {
-    // Blocca i comandi se il gioco è finito o in pausa
-    if (isGameOver || (typeof isPaused !== 'undefined' && isPaused)) return;
+    // Blocca i comandi se il gioco è in pausa, finito o se c'è l'animazione di partenza!
+    if (isGameOver || (typeof isPaused !== 'undefined' && isPaused) || player.isStarting) return;
     
     const key = e.key.toLowerCase();
     
@@ -44,6 +47,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 document.addEventListener('keyup', (e) => {
+    if (player.isStarting) return;
     const key = e.key.toLowerCase();
     
     if (key === 'a' || key === 'arrowleft' || key === 'd' || key === 'arrowright') {
@@ -60,14 +64,14 @@ function setupTouchControls() {
     let previousTouchX = 0;
 
     canvas.addEventListener('touchstart', (e) => {
-        if (isGameOver || (typeof isPaused !== 'undefined' && isPaused)) return;
+        if (isGameOver || (typeof isPaused !== 'undefined' && isPaused) || player.isStarting) return;
         isDragging = true;
         player.isAccelerating = true; 
         previousTouchX = e.touches[0].clientX;
     }, { passive: false });
 
     canvas.addEventListener('touchmove', (e) => {
-        if (!isDragging || isGameOver || (typeof isPaused !== 'undefined' && isPaused)) return;
+        if (!isDragging || isGameOver || (typeof isPaused !== 'undefined' && isPaused) || player.isStarting) return;
         e.preventDefault(); 
         const currentTouchX = e.touches[0].clientX;
         player.x += (currentTouchX - previousTouchX); 
@@ -79,6 +83,7 @@ function setupTouchControls() {
     }, { passive: false });
 
     canvas.addEventListener('touchend', () => {
+        if (player.isStarting) return;
         isDragging = false;
         player.isAccelerating = false; 
     });
@@ -86,14 +91,29 @@ function setupTouchControls() {
 
 // --- FISICA E DISEGNO ---
 function updatePlayer() {
+    // --- ANIMAZIONE DI IMMISSIONE IN STRADA ---
+    if (player.isStarting) {
+        player.speedZ += 0.02; // Il computer accelera la macchina dolcemente
+        
+        // Quando raggiunge i 10 km/h (speedZ = 1), inizia a sterzare a sinistra per immettersi
+        if (player.speedZ > 1.0) {
+            player.x -= 0.5; 
+        }
+
+        // Quando raggiunge la velocità minima e si è immessa nella corsia giusta
+        if (player.speedZ >= player.minSpeedZ && player.x <= canvas.width - 100) {
+            player.speedZ = player.minSpeedZ;
+            player.isStarting = false; // Fine animazione, comandi restituiti al giocatore!
+        }
+        return; // Salta il resto della fisica durante l'animazione
+    }
+
+    // --- LOGICA NORMALE (Dopo l'immissione) ---
     player.x += player.dx;
     if (player.x < 10) player.x = 10;
     if (player.x + player.width > canvas.width - 10) player.x = canvas.width - player.width - 10;
 
-    // --- LOGICA FRIZIONE E ACCELERAZIONE ---
     if (player.shiftDelay > 0) {
-        // Se stiamo cambiando marcia, il timer scende.
-        // LA VELOCITÀ NON CAMBIA: L'auto va per inerzia mantenendo la sua velocità
         player.shiftDelay--;
     } else {
         if (player.isAccelerating) {
