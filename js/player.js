@@ -1,6 +1,6 @@
 // --- L'AUTO DEL GIOCATORE ---
 const player = {
-    x: 0, y: 0, width: 40, height: 70, // Questa è la HITBOX reale
+    x: 0, y: 0, width: 40, height: 70, // HITBOX TECNICA
     speedX: 0, dx: 0, speedZ: 0, maxSpeedZ: 0, minSpeedZ: 1, 
     accelRate: 0, isAccelerating: false, hasAcceleratedOnce: false, 
     shiftDelay: 0, isIgniting: true, isStarting: false 
@@ -104,11 +104,11 @@ function updatePlayer() {
 
 function drawPlayer() {
     if (playerSprite.complete && playerSprite.naturalHeight !== 0) {
-        // Aumentiamo leggermente la dimensione visiva rispetto alla hitbox (40x70)
-        // Disegniamo 4 px extra per lato (Totale 48x84)
-        let drawW = player.width + 8;
-        let drawH = player.height + 14;
-        ctx.drawImage(playerSprite, player.x - 4, player.y - 7, drawW, drawH);
+        // Dimensioni visuali aumentate a 56x98 (Hitbox 40x70 + 16px larghezza / + 28px altezza)
+        let drawW = player.width + 16;
+        let drawH = player.height + 28;
+        // Offset di -8 e -14 per centrare l'immagine sulla hitbox
+        ctx.drawImage(playerSprite, player.x - 8, player.y - 14, drawW, drawH);
     } else {
         ctx.fillStyle = '#ff2a2a'; 
         ctx.fillRect(player.x, player.y, player.width, player.height);
