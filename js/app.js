@@ -1,4 +1,4 @@
-// --- GESTIONE AUDIO MENU GLOBALE ---
+// --- GESTIONE AUDIO MENU GLOBALE --
 window.menuMusic = new Audio('audio/menu.mp3');
 window.menuMusic.loop = true;
 window.menuMusic.volume = 0.4; 
