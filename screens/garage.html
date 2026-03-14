@@ -1,50 +1,58 @@
-<section id="screen-garage" class="screen active">
+<section id="screen-garage" class="screen active" style="justify-content: flex-start; padding-top: 20px;">
 
-    <h2 class="garage-header">GARAGE</h2>
-    <p class="garage-sub">Scegli la tua auto</p>
+    <div class="home-money-badge" style="position: static; margin-bottom: 15px;">
+        💵 <span id="home-banknotes">0</span>
+    </div>
 
-    <div style="
-        background: var(--bg-card);
-        border: 1px solid var(--border-dim);
-        border-top: 2px solid var(--neon-cyan);
-        border-radius: 12px;
-        padding: 20px;
-        text-align: center;
-        width: 85%;
-        max-width: 320px;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 30px rgba(0,240,255,0.06);
-    ">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <button onclick="changeCar(-1)" style="background:none;border:none;color:var(--neon-cyan);font-size:30px;cursor:pointer;">◀</button>
-            
-            <div style="height: 120px; display: flex; align-items: center; justify-content: center;">
-                <img id="g-car-img" src="" alt="Auto" style="max-height: 100px; max-width: 150px; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));">
+    <div class="garage-container" style="width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 15px;">
+        
+        <div style="background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border-dim); padding: 20px; text-align: center; position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <button onclick="changeCar(-1)" style="background:none; border:none; color:var(--neon-cyan); font-size:24px; cursor:pointer;">◀</button>
+                <img id="g-car-img" src="" style="height: 100px; filter: drop-shadow(0 0 15px rgba(0,240,255,0.3));">
+                <button onclick="changeCar(1)" style="background:none; border:none; color:var(--neon-cyan); font-size:24px; cursor:pointer;">▶</button>
             </div>
-            
-            <button onclick="changeCar(1)" style="background:none;border:none;color:var(--neon-cyan);font-size:30px;cursor:pointer;">▶</button>
+            <h2 id="g-car-name" style="font-family:'Orbitron'; color: var(--neon-cyan); margin-top: 10px;">CAR NAME</h2>
+            <p id="g-car-status" style="font-size: 12px; letter-spacing: 2px;">STATUS</p>
         </div>
 
-        <p id="g-car-name" style="font-family:'Orbitron',monospace;font-size:20px;color:var(--neon-cyan);letter-spacing:.1em;margin-bottom:2px;">NOME AUTO</p>
-        <p id="g-car-status" style="font-size:13px;letter-spacing:.15em;text-transform:uppercase;">Stato</p>
-
-        <div style="border-top:1px solid var(--border-dim);margin:15px 0;"></div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:left;margin-bottom: 20px;">
-            <div>
-                <p style="font-size:11px;letter-spacing:.2em;color:var(--text-muted);text-transform:uppercase;">Velocità</p>
-                <p style="font-family:'Orbitron',monospace;font-size:18px;color:var(--text-primary);"><span id="g-stat-speed">0</span></p>
-            </div>
-            <div>
-                <p style="font-size:11px;letter-spacing:.2em;color:var(--text-muted);text-transform:uppercase;">Sterzata</p>
-                <p style="font-family:'Orbitron',monospace;font-size:18px;color:var(--text-primary);"><span id="g-stat-handling">0</span></p>
-            </div>
+        <div id="g-buy-section" style="display:none; text-align: center;">
+            <button id="g-buy-btn" class="play-btn success" style="width: 100%;">ACQUISTA</button>
         </div>
 
-        <button id="g-action-btn" class="play-btn secondary" style="width: 100%; padding: 12px; font-size: 14px; display: none;">SELEZIONA</button>
+        <div id="g-workshop-section" style="display:none; background: var(--bg-panel); border-radius: 16px; padding: 20px; border: 1px solid var(--neon-orange);">
+            <h3 style="font-family:'Orbitron'; font-size: 14px; color: var(--neon-orange); margin-bottom: 15px; text-align: center;">🔧 OFFICINA POTENZIAMENTI</h3>
+            
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <p style="font-size: 12px; color: var(--text-muted);">VELOCITÀ MAX</p>
+                        <p id="lvl-speed" style="font-size: 14px; font-family: 'Orbitron';">Lvl 0/5</p>
+                    </div>
+                    <button id="btn-up-speed" class="play-btn secondary" style="padding: 8px 15px; font-size: 11px;">UP 💵 1000</button>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <p style="font-size: 12px; color: var(--text-muted);">STERZATA</p>
+                        <p id="lvl-handling" style="font-size: 14px; font-family: 'Orbitron';">Lvl 0/5</p>
+                    </div>
+                    <button id="btn-up-handling" class="play-btn secondary" style="padding: 8px 15px; font-size: 11px;">UP 💵 1000</button>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <p style="font-size: 12px; color: var(--text-muted);">ACCELERAZIONE</p>
+                        <p id="lvl-accel" style="font-size: 14px; font-family: 'Orbitron';">Lvl 0/5</p>
+                    </div>
+                    <button id="btn-up-accel" class="play-btn secondary" style="padding: 8px 15px; font-size: 11px;">UP 💵 1000</button>
+                </div>
+            </div>
 
+            <button id="g-equip-btn" class="play-btn" onclick="equipCar()" style="width: 100%; margin-top: 15px; font-size: 14px;">SELEZIONA AUTO</button>
+        </div>
     </div>
 
     <script>
-        setTimeout(initGarage, 50);
+        if (typeof initGarage === 'function') initGarage();
+        else setTimeout(initGarage, 100);
     </script>
 </section>
