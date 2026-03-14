@@ -1,161 +1,74 @@
-window.carCatalog = [
-    {
-        id: 1,
-        name: "Maggiolino Race",
-        price: 0,
-        baseStats: { handling: 5.5, acceleration: 0.04, maxSpeed: 15 },
-        imgGarage: "img/cars/car_01_garage.png",
-        imgGame:   "img/cars/car_01_game.png"
-    },
-    {
-        id: 2,
-        name: "Ford Mustang",
-        price: 18000,
-        baseStats: { handling: 6.2, acceleration: 0.05, maxSpeed: 18 },
-        imgGarage: "img/cars/car_02_garage.png",
-        imgGame:   "img/cars/car_02_game.png"
-    }
-];
-
-/* ─── PROFILO ────────────────────────────────── */
-function getProfile() {
-    let p = localStorage.getItem('ryderzProfileV4');
-    if (!p) {
-        const fresh = { banknotes: 0, unlockedCars: [1], equippedCarId: 1, upgrades: {} };
-        localStorage.setItem('ryderzProfileV4', JSON.stringify(fresh));
-        return fresh;
-    }
-    return JSON.parse(p);
-}
-window.playerProfile = getProfile();
-
-function saveProfile() {
-    localStorage.setItem('ryderzProfileV4', JSON.stringify(window.playerProfile));
-}
-
-function addBanknotes(amt) {
-    window.playerProfile.banknotes += amt;
-    saveProfile();
-}
-
-/* ─── GARAGE UI ──────────────────────────────── */
-let currentViewIndex = 0;
-
 function initGarage() {
-    window.playerProfile = getProfile();
-    currentViewIndex = window.carCatalog.findIndex(c => c.id === window.playerProfile.equippedCarId);
-    if (currentViewIndex < 0) currentViewIndex = 0;
-    updateGarageUI();
-}
-
-function changeCar(dir) {
-    currentViewIndex = (currentViewIndex + dir + window.carCatalog.length) % window.carCatalog.length;
+    window.playerProfile = JSON.parse(localStorage.getItem('ryderzProfileV4'));
     updateGarageUI();
 }
 
 function updateGarageUI() {
-    const car      = window.carCatalog[currentViewIndex];
-    const profile  = window.playerProfile;
+    const profile = window.playerProfile;
+    const car = window.carCatalog[currentViewIndex || 0];
     const isUnlocked = profile.unlockedCars.includes(car.id);
     const isEquipped = profile.equippedCarId === car.id;
 
-    const carImg  = document.getElementById('g-car-img');
-    const carName = document.getElementById('g-car-name');
-    const carStat = document.getElementById('g-car-status');
-    const bankEl  = document.getElementById('home-banknotes');
+    document.getElementById('g-car-img').src = car.imgGarage;
+    document.getElementById('g-car-name').innerText = car.name;
+    document.getElementById('home-banknotes').innerText = profile.banknotes;
 
-    if (carImg)  carImg.src = car.imgGarage;
-    if (carName) carName.textContent = car.name;
-    if (bankEl)  bankEl.textContent  = profile.banknotes;
-
-    if (carStat) {
-        carStat.textContent  = isEquipped  ? '✅ EQUIPAGGIATA' :
-                               isUnlocked  ? 'SBLOCCATA'       : '🔒 BLOCCATA';
-        carStat.style.color  = isEquipped  ? 'var(--neon-orange)' :
-                               isUnlocked  ? 'var(--neon-cyan)'   : 'var(--text-muted)';
-    }
-
-    const buySection      = document.getElementById('g-buy-section');
-    const workshopSection = document.getElementById('g-workshop-section');
-    const equipBtn        = document.getElementById('g-equip-btn');
+    const workshop = document.getElementById('g-workshop-section');
+    const buySec = document.getElementById('g-buy-section');
 
     if (isUnlocked) {
-        if (buySection)      buySection.style.display      = 'none';
-        if (workshopSection) workshopSection.style.display = 'block';
-        if (equipBtn)        equipBtn.style.display        = isEquipped ? 'none' : 'block';
-        updateWorkshopUI(car);
+        buySec.style.display = "none";
+        workshop.style.display = "block";
+        document.getElementById('g-car-status').innerText = isEquipped ? "EQUIPAGGIATA" : "POSSEDUTA";
+        updateWorkshopStats(car);
     } else {
-        if (buySection)      buySection.style.display      = 'block';
-        if (workshopSection) workshopSection.style.display = 'none';
-
-        const buyBtn = document.getElementById('g-buy-btn');
-        if (buyBtn) {
-            const canAfford = profile.banknotes >= car.price;
-            buyBtn.textContent = `COMPRA 💵 ${car.price.toLocaleString()}`;
-            buyBtn.disabled    = !canAfford;
-            buyBtn.style.opacity = canAfford ? '1' : '0.45';
-            buyBtn.onclick = () => {
-                if (profile.banknotes >= car.price) {
-                    profile.banknotes -= car.price;
-                    profile.unlockedCars.push(car.id);
-                    saveProfile();
-                    updateGarageUI();
-                }
-            };
-        }
+        buySec.style.display = "block";
+        workshop.style.display = "none";
+        document.getElementById('g-buy-btn').innerText = `COMPRA 💵 ${car.price}`;
     }
 }
 
-/* ─── OFFICINA ───────────────────────────────── */
-function updateWorkshopUI(car) {
-    if (!window.playerProfile.upgrades[car.id]) {
-        window.playerProfile.upgrades[car.id] = { speed: 0, handling: 0, accel: 0 };
-    }
-    const up = window.playerProfile.upgrades[car.id];
+function updateWorkshopStats(car) {
+    const up = window.playerProfile.upgrades[car.id] || { speed: 0, handling: 0, accel: 0 };
+    const stats = ['speed', 'handling', 'accel'];
 
-    ['speed', 'handling', 'accel'].forEach(type => {
-        const lvl  = up[type];
+    stats.forEach(s => {
+        const lvl = up[s] || 0;
         const cost = Math.floor(1000 * Math.pow(1.25, lvl));
-
-        const lvlEl = document.getElementById(`lvl-${type}`);
-        const barEl = document.getElementById(`bar-${type}`);
-        const btn   = document.getElementById(`btn-up-${type}`);
-
-        if (lvlEl) lvlEl.textContent    = `${lvl}/5`;
-        if (barEl) barEl.style.width    = (lvl * 20) + '%';
-
-        if (!btn) return;
-
+        document.getElementById(`lvl-${s}`).innerText = `${lvl}/5`;
+        document.getElementById(`bar-${s}`).style.width = (lvl * 20) + "%";
+        
+        const btn = document.getElementById(`btn-up-${s}`);
         if (lvl >= 5) {
-            btn.disabled    = true;
-            btn.textContent = 'MAX';
-            btn.style.opacity = '0.5';
+            btn.innerText = "MAX";
+            btn.disabled = true;
         } else {
-            const canAfford = window.playerProfile.banknotes >= cost;
-            btn.disabled    = false;
-            btn.textContent = `⬆ ${cost.toLocaleString()}💵`;
-            btn.style.opacity = canAfford ? '1' : '0.5';
-            btn.onclick = () => {
-                if (window.playerProfile.banknotes >= cost) {
-                    window.playerProfile.banknotes -= cost;
-                    window.playerProfile.upgrades[car.id][type]++;
-                    saveProfile();
-                    updateGarageUI();
-                    // Flash animazione
-                    const ws = document.getElementById('g-workshop-section');
-                    if (ws) {
-                        ws.classList.remove('flash-upgrade');
-                        void ws.offsetWidth;
-                        ws.classList.add('flash-upgrade');
-                    }
-                }
-            };
+            btn.innerText = `UP 💵 ${cost}`;
+            btn.onclick = () => buyUpgrade(car.id, s, cost);
         }
     });
 }
 
+function buyUpgrade(carId, type, cost) {
+    if (window.playerProfile.banknotes >= cost) {
+        window.playerProfile.banknotes -= cost;
+        if (!window.playerProfile.upgrades[carId]) window.playerProfile.upgrades[carId] = { speed:0, handling:0, accel:0 };
+        window.playerProfile.upgrades[carId][type]++;
+        
+        localStorage.setItem('ryderzProfileV4', JSON.stringify(window.playerProfile));
+        
+        // Animazione Flash
+        const ws = document.getElementById('g-workshop-section');
+        ws.classList.remove('flash-upgrade');
+        void ws.offsetWidth; 
+        ws.classList.add('flash-upgrade');
+        
+        updateGarageUI();
+    }
+}
+
 function equipCar() {
     window.playerProfile.equippedCarId = window.carCatalog[currentViewIndex].id;
-    saveProfile();
+    localStorage.setItem('ryderzProfileV4', JSON.stringify(window.playerProfile));
     updateGarageUI();
 }
