@@ -94,28 +94,68 @@ function runGameLoop() {
 }
 
 function drawRoad() {
+    // 1. Asfalto principale
     ctx.fillStyle = '#444'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
     roadOffset = (roadOffset + player.speedZ) % 40; 
+    
+    // 2. Doppia striscia gialla centrale
     ctx.fillStyle = '#FFEB3B'; 
     for (let i = -40; i < canvas.height; i += 40) {
         ctx.fillRect(canvas.width / 2 - 3, i + roadOffset, 2, 20);
         ctx.fillRect(canvas.width / 2 + 1, i + roadOffset, 2, 20);
     }
+    
+    // 3. Strisce corsie bianche tratteggiate
     ctx.fillStyle = 'white';
     for (let i = -40; i < canvas.height; i += 40) {
         ctx.fillRect(canvas.width / 4 - 2, i + roadOffset, 4, 20); 
         ctx.fillRect((canvas.width / 4) * 3 - 2, i + roadOffset, 4, 20); 
     }
-    if (totalDistance < canvas.height + 1000) {
-        let sostaY = (canvas.height - 300) + totalDistance; 
-        ctx.fillStyle = '#222'; ctx.fillRect(canvas.width - 50, sostaY, 50, 900);
-        ctx.fillStyle = 'white'; ctx.fillRect(canvas.width - 52, 0, 2, canvas.height); 
-        ctx.fillStyle = '#444'; ctx.fillRect(canvas.width - 52, sostaY + 100, 2, 700);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'; ctx.font = "bold 20px Arial";
-        ctx.fillText("AREA SOS", canvas.width - 48, sostaY + 300);
-    } else {
-        ctx.fillStyle = 'white'; ctx.fillRect(canvas.width - 5, 0, 5, canvas.height);
-        ctx.fillRect(0, 0, 5, canvas.height);
+
+    // 4. Bordi laterali stradali continui
+    ctx.fillStyle = 'white'; 
+    ctx.fillRect(0, 0, 4, canvas.height); 
+    ctx.fillRect(canvas.width - 4, 0, 4, canvas.height); 
+
+    // 5. AREA DI SOSTA - Chiusura morbida ad imbuto
+    if (totalDistance < 1500) { 
+        // Inizia più in alto per permettere al giocatore di accorgersi che la corsia si chiude
+        let sostaY = totalDistance - 200; 
+        
+        let areaWidth = 60;    // Larghezza dell'area di sosta
+        let taperLength = 250; // Lunghezza del restringimento (scivolo per rientrare in autostrada)
+        
+        // A. Disegna il pavimento scuro della piazzola
+        ctx.fillStyle = '#2A2A2A'; 
+        ctx.beginPath();
+        ctx.moveTo(canvas.width, sostaY); // Punta di fusione in corsia
+        ctx.lineTo(canvas.width - areaWidth, sostaY + taperLength); // Inizio dell'imbuto
+        ctx.lineTo(canvas.width - areaWidth, sostaY + 1800); // Lunga oltre il limite visivo
+        ctx.lineTo(canvas.width, sostaY + 1800);
+        ctx.fill();
+
+        // B. Striscia bianca continua laterale (diagonale + dritta)
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(canvas.width - 2, sostaY);
+        ctx.lineTo(canvas.width - areaWidth, sostaY + taperLength);
+        ctx.lineTo(canvas.width - areaWidth, sostaY + 1800);
+        ctx.stroke();
+
+        // C. Testo "AREA SOS" ruotato e dipinto sull'asfalto
+        let textY = sostaY + taperLength + 100;
+        if (textY > -100 && textY < canvas.height + 200) {
+            ctx.save();
+            ctx.translate(canvas.width - (areaWidth / 2), textY);
+            ctx.rotate(-Math.PI / 2); 
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.45)'; 
+            ctx.font = "bold 22px 'Orbitron', Arial";
+            ctx.textAlign = "center";
+            ctx.fillText("AREA SOS", 0, 8); 
+            ctx.restore();
+        }
     }
 }
 
@@ -136,6 +176,7 @@ function updateScoreDisplay() {
     
     let visualSpeed = Math.floor(player.speedZ * 10);
     
+    // --- LOGICA 6 MARCE ---
     let newGear = 1;
     if (visualSpeed > 125) newGear = 6;      
     else if (visualSpeed > 100) newGear = 5;
