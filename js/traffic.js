@@ -34,37 +34,61 @@ function manageEnemies() {
 
         const ey = relSpeed > 0 ? -100 : canvas.height + 150;
 
-        enemies.push({
-            x: (lane * laneWidth) + (laneWidth / 2) - 20, 
-            y: ey, 
-            width: 40, height: 70, 
-            absSpeed: absSpeed, isOncoming: isOncoming, lane: lane,
-            color: enemyColors[Math.floor(Math.random() * enemyColors.length)],
-            passed: false,
-            isChanging: false, targetX: 0, 
-            indicator: null, indicatorTimer: 0,
-            isBastard: (score > 1000 && Math.random() < 0.15) 
-        });
+        // --- CONTROLLO ANTI-SOVRAPPOSIZIONE ALLO SPAWN ---
+        // Evita che due macchine spawnino troppo vicine nella stessa corsia
+        let canSpawn = true;
+        for (let j = 0; j < enemies.length; j++) {
+            if (enemies[j].lane === lane && Math.abs(enemies[j].y - ey) < 180) {
+                canSpawn = false;
+                break;
+            }
+        }
+
+        if (canSpawn) {
+            enemies.push({
+                x: (lane * laneWidth) + (laneWidth / 2) - 20, 
+                y: ey, 
+                width: 40, height: 70, 
+                absSpeed: absSpeed, isOncoming: isOncoming, lane: lane,
+                color: enemyColors[Math.floor(Math.random() * enemyColors.length)],
+                passed: false,
+                isChanging: false, targetX: 0, 
+                indicator: null, indicatorTimer: 0,
+                isBastard: (score > 1000 && Math.random() < 0.15) 
+            });
+        }
     }
 
     // 2. LOGICA E MOVIMENTO
     for (let i = enemies.length - 1; i >= 0; i--) {
         let e = enemies[i];
         
-        // --- EVITAMENTO INCIDENTI CON ALTRI NEMICI ---
+        // --- EVITAMENTO INCIDENTI CON ALTRI NEMICI (MIGLIORATO) ---
         for (let j = 0; j < enemies.length; j++) {
             if (i === j) continue;
             let other = enemies[j];
+            
+            // Se sono nella stessa corsia e direzione, e non stanno cambiando corsia
             if (e.lane === other.lane && e.isOncoming === other.isOncoming && !e.isChanging && !other.isChanging) {
                 if (!e.isOncoming) {
-                    let distance = e.y - (other.y + other.height);
-                    if (distance > 0 && distance < 110 && e.absSpeed > other.absSpeed) {
-                        e.absSpeed = other.absSpeed; 
+                    // Stessa direzione: se "e" è dietro "other" (e.y maggiore)
+                    let distance = e.y - other.y;
+                    if (distance > 0 && distance < 140) {
+                        if (distance < 80) {
+                            e.absSpeed = Math.max(1, other.absSpeed - 0.5); // Frena bruscamente per creare distacco
+                        } else if (e.absSpeed > other.absSpeed) {
+                            e.absSpeed = other.absSpeed; // Mantiene semplicemente la distanza
+                        }
                     }
                 } else {
-                    let distance = other.y - (e.y + e.height);
-                    if (distance > 0 && distance < 110 && e.absSpeed > other.absSpeed) {
-                        e.absSpeed = other.absSpeed;
+                    // Contromano: siccome scendono, se "other" è dietro "e" (other.y maggiore)
+                    let distance = other.y - e.y;
+                    if (distance > 0 && distance < 140) {
+                        if (distance < 80) {
+                            e.absSpeed = Math.max(1, other.absSpeed - 0.5); // Frenata per distanziamento
+                        } else if (e.absSpeed > other.absSpeed) {
+                            e.absSpeed = other.absSpeed;
+                        }
                     }
                 }
             }
@@ -83,7 +107,7 @@ function manageEnemies() {
         let relSpeed = e.isOncoming ? (player.speedZ + e.absSpeed) : (player.speedZ - e.absSpeed);
         e.y += relSpeed; 
 
-        // --- CAMBIO CORSIA INTELLIGENTE ---
+        // --- CAMBIO CORSIA INTELLIGENTE (SICURO) ---
         if (!e.isChanging && !e.isOncoming && Math.random() < 0.005) {
             let nextLane = e.lane + (Math.random() < 0.5 ? -1 : 1);
             if (nextLane >= 2 && nextLane <= 3) {
@@ -91,7 +115,8 @@ function manageEnemies() {
                 for (let j = 0; j < enemies.length; j++) {
                     if (i === j) continue;
                     let other = enemies[j];
-                    if (other.lane === nextLane && Math.abs(e.y - other.y) < 130) {
+                    // Distanza di sicurezza molto ampia prima di cambiare corsia (160px)
+                    if (other.lane === nextLane && Math.abs(e.y - other.y) < 160) {
                         canChange = false;
                         break;
                     }
