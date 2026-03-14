@@ -3,21 +3,18 @@ let enemies = [];
 let enemySpawnRate = 80; 
 let liscioEffects = []; 
 
-// Metti qui i nomi delle tue immagini dei nemici
 const enemyImagesSrc = [
     'img/cars/enemy_01.png', 
     'img/cars/enemy_02.png', 
     'img/cars/enemy_03.png'
 ];
 
-// Pre-carichiamo le immagini in memoria
 const enemySprites = enemyImagesSrc.map(src => {
     let img = new Image();
     img.src = src;
     return img;
 });
 
-// Colori di backup se l'immagine non carica
 const enemyColors = ['#2196F3', '#FFEB3B', '#4CAF50', '#9C27B0', '#FF9800'];
 
 function resetTraffic() {
@@ -57,7 +54,6 @@ function manageEnemies() {
         }
 
         if (canSpawn) {
-            // Assegna uno sprite casuale
             let randomSprite = enemySprites[Math.floor(Math.random() * enemySprites.length)];
             let randomColor = enemyColors[Math.floor(Math.random() * enemyColors.length)];
 
@@ -79,7 +75,6 @@ function manageEnemies() {
     for (let i = enemies.length - 1; i >= 0; i--) {
         let e = enemies[i];
         
-        // Evitamento incidenti tra nemici
         for (let j = 0; j < enemies.length; j++) {
             if (i === j) continue;
             let other = enemies[j];
@@ -100,7 +95,6 @@ function manageEnemies() {
             }
         }
 
-        // Evitamento incidenti con giocatore
         if (!e.isOncoming && !e.isChanging) {
             if (Math.abs((e.x + e.width/2) - (player.x + player.width/2)) < 35) {
                 let distanceToPlayer = e.y - (player.y + player.height);
@@ -113,7 +107,6 @@ function manageEnemies() {
         let relSpeed = e.isOncoming ? (player.speedZ + e.absSpeed) : (player.speedZ - e.absSpeed);
         e.y += relSpeed; 
 
-        // Cambio corsia
         if (!e.isChanging && !e.isOncoming && Math.random() < 0.005) {
             let nextLane = e.lane + (Math.random() < 0.5 ? -1 : 1);
             if (nextLane >= 2 && nextLane <= 3) {
@@ -149,29 +142,24 @@ function manageEnemies() {
             }
         }
 
-        // DISEGNO AUTO NEMICA (Immagine se caricata, altrimenti colore backup)
+        // DISEGNO AUTO NEMICA (Ridisegnata più grande visivamente)
         if (e.sprite && e.sprite.complete && e.sprite.naturalHeight !== 0) {
-            // Se l'auto viene in senso opposto, potremmo ruotarla, ma per semplicità assumiamo 
-            // che hai sprites orientati bene o che si girino col ctx
+            let drawW = e.width + 8;
+            let drawH = e.height + 14;
             if (e.isOncoming) {
                 ctx.save();
                 ctx.translate(e.x + e.width/2, e.y + e.height/2);
-                ctx.rotate(Math.PI); // Gira l'immagine di 180 gradi
-                ctx.drawImage(e.sprite, -e.width/2, -e.height/2, e.width, e.height);
+                ctx.rotate(Math.PI); 
+                ctx.drawImage(e.sprite, -drawW/2, -drawH/2, drawW, drawH);
                 ctx.restore();
             } else {
-                ctx.drawImage(e.sprite, e.x, e.y, e.width, e.height);
+                ctx.drawImage(e.sprite, e.x - 4, e.y - 7, drawW, drawH);
             }
         } else {
-            // Backup grafico se l'immagine manca
             ctx.fillStyle = e.colorBackup;
             ctx.fillRect(e.x, e.y, e.width, e.height);
-            ctx.fillStyle = '#111';
-            ctx.fillRect(e.x + 5, e.y + (e.isOncoming ? 45 : 10), e.width - 10, 15); 
-            ctx.fillRect(e.x + 5, e.y + (e.isOncoming ? 10 : 45), e.width - 10, 15);
         }
         
-        // Frecce direzionali dei nemici
         if (e.indicator && !e.isBastard && Math.floor(frames / 8) % 2 === 0) {
             ctx.fillStyle = '#FF9800'; 
             let fx = e.indicator === 'left' ? e.x - 2 : e.x + e.width - 6;
