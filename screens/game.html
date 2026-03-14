@@ -1,25 +1,17 @@
 <section id="screen-game" class="screen full-screen active">
-
-    <!-- HUD -->
-    <div id="game-ui">
-        <div class="hud-left">
-            <span id="score">Punti: 0</span>
-            <div class="hud-speed-row">
-                <span id="speedometer">0 km/h</span>
-                <span id="gear-display">M: 1</span>
-            </div>
+    <div id="game-ui" style="position: absolute; width: 100%; padding: 20px; display: flex; justify-content: space-between; z-index: 10; pointer-events: none;">
+        <div style="pointer-events: auto;">
+            <p id="score" style="font-family: 'Orbitron'; color: var(--neon-cyan); font-size: 20px;">Punti: 0</p>
+            <p id="speedometer" style="font-family: 'Orbitron'; color: var(--text-primary); font-size: 16px;">0 km/h</p>
         </div>
-        <button id="btn-pause" onclick="togglePause()">⏸</button>
+        <button onclick="togglePause()" style="pointer-events: auto; background: none; border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 5px 15px; border-radius: 5px; cursor: pointer;">⏸ PAUSA</button>
     </div>
 
-    <!-- Menu Pausa -->
-    <div id="pause-menu" style="display:none;">
-        <h2 class="pause-title">IN PAUSA</h2>
-        <button class="play-btn success" onclick="togglePause()">▶ RIPRENDI</button>
-        <button class="play-btn danger"  onclick="quitGame()">🏠 MENU PRINCIPALE</button>
+    <div id="pause-menu" style="display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.85); flex-direction: column; align-items: center; justify-content: center; z-index: 100;">
+        <h2 style="font-family: 'Orbitron'; color: var(--neon-orange); margin-bottom: 30px;">IN PAUSA</h2>
+        <button class="play-btn success" onclick="togglePause()" style="margin-bottom: 15px; width: 200px;">RIPRENDI</button>
+        <button class="play-btn danger" onclick="quitGame()" style="width: 200px; background: #8B0000;">ESCI</button>
     </div>
 
-    <!-- Canvas di gioco -->
-    <canvas id="gameCanvas" width="400" height="600"></canvas>
-
+    <canvas id="gameCanvas" width="400" height="600" style="background: #222; box-shadow: 0 0 50px rgba(0,0,0,0.5);"></canvas>
 </section>
