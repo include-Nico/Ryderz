@@ -18,17 +18,25 @@ function resetPlayer() {
     player.isIgniting = true; 
     player.isStarting = false;
     
-    let currentCar = carCatalog.find(c => c.id === playerProfile.equippedCarId);
-    if(!currentCar) currentCar = carCatalog[0];
+    // 1. Recupera l'auto equipaggiata dal catalogo
+    const profile = window.playerProfile;
+    let baseCar = carCatalog.find(c => c.id === profile.equippedCarId) || carCatalog[0];
+    
+    // 2. Recupera i livelli di potenziamento (Officina)
+    let upgrades = profile.upgrades[baseCar.id] || { speed: 0, handling: 0, accel: 0 };
 
-    playerSprite.src = currentCar.imgGame; 
-    player.speedX = currentCar.stats.handling;
-    player.accelRate = currentCar.stats.acceleration;
-    player.maxSpeedZ = currentCar.stats.maxSpeed;
+    // 3. Calcola statistiche finali (Base + 5% bonus per ogni livello raggiunto)
+    player.maxSpeedZ = baseCar.baseStats.maxSpeed * (1 + (upgrades.speed * 0.05));
+    player.speedX = baseCar.baseStats.handling * (1 + (upgrades.handling * 0.05));
+    player.accelRate = baseCar.baseStats.acceleration * (1 + (upgrades.accel * 0.05));
+    
+    // 4. Carica l'immagine corretta
+    playerSprite.src = baseCar.imgGame;
     player.speedZ = 0;
     player.minSpeedZ = 1; 
 }
 
+// Gestione Input (Tastiera)
 document.addEventListener('keydown', (e) => {
     if (isGameOver || (typeof isPaused !== 'undefined' && isPaused) || player.isIgniting || player.isStarting) return;
     const key = e.key.toLowerCase();
@@ -43,6 +51,7 @@ document.addEventListener('keyup', (e) => {
     else if (key === 'w' || key === 'arrowup') player.isAccelerating = false;
 });
 
+// Gestione Input (Touch Mobile)
 function setupTouchControls() {
     let isDragging = false;
     let previousTouchX = 0;
@@ -59,6 +68,8 @@ function setupTouchControls() {
         e.preventDefault(); 
         const currentTouchX = e.touches[0].clientX;
         player.x += (currentTouchX - previousTouchX); 
+        
+        // Limiti laterali della strada
         if (player.x < 10) player.x = 10;
         if (player.x + player.width > canvas.width - 10) player.x = canvas.width - player.width - 10;
         previousTouchX = currentTouchX;
@@ -73,6 +84,7 @@ function setupTouchControls() {
 function updatePlayer() {
     if (player.isIgniting) return;
 
+    // Animazione di immissione dall'Area SOS
     if (player.isStarting) {
         player.speedZ += 0.015;
         if (player.speedZ > 0.4) player.x -= 0.6; 
@@ -83,20 +95,23 @@ function updatePlayer() {
         return;
     }
 
+    // Movimento laterale
     player.x += player.dx;
     if (player.x < 10) player.x = 10;
     if (player.x + player.width > canvas.width - 10) player.x = canvas.width - player.width - 10;
 
+    // Gestione accelerazione e cambio marcia
     if (player.shiftDelay > 0) {
         player.shiftDelay--;
     } else {
         if (player.isAccelerating) {
             player.hasAcceleratedOnce = true; 
+            // Resistenza all'aria: l'accelerazione diminuisce avvicinandosi alla velocità massima
             let resistance = player.speedZ / (player.maxSpeedZ * 1.2);
             player.speedZ += player.accelRate * (1 - resistance); 
             if (player.speedZ > player.maxSpeedZ) player.speedZ = player.maxSpeedZ;
         } else {
-            player.speedZ -= 0.1; 
+            player.speedZ -= 0.1; // Attrito/Freno motore
             if (player.speedZ < player.minSpeedZ) player.speedZ = player.minSpeedZ;
         }
     }
@@ -104,16 +119,17 @@ function updatePlayer() {
 
 function drawPlayer() {
     if (playerSprite.complete && playerSprite.naturalHeight !== 0) {
-        // Dimensioni visuali aumentate a 56x98 (Hitbox 40x70 + 16px larghezza / + 28px altezza)
+        // Disegno con dimensioni maggiorate (56x98) per coprire meglio la hitbox (40x70)
         let drawW = player.width + 16;
         let drawH = player.height + 28;
-        // Offset di -8 e -14 per centrare l'immagine sulla hitbox
         ctx.drawImage(playerSprite, player.x - 8, player.y - 14, drawW, drawH);
     } else {
+        // Rettangolo di backup (se l'immagine non carica)
         ctx.fillStyle = '#ff2a2a'; 
         ctx.fillRect(player.x, player.y, player.width, player.height);
     }
     
+    // Freccia lampeggiante durante l'immissione
     if (player.isStarting && typeof frames !== 'undefined' && Math.floor(frames / 8) % 2 === 0) {
         ctx.fillStyle = '#FF9800'; 
         ctx.fillRect(player.x - 2, player.y + 2, 8, 8);
