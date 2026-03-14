@@ -1,8 +1,24 @@
 // --- VARIABILI DEL TRAFFICO ---
 let enemies = [];
 let enemySpawnRate = 80; 
-const enemyColors = ['#2196F3', '#FFEB3B', '#4CAF50', '#9C27B0', '#FF9800'];
 let liscioEffects = []; 
+
+// Metti qui i nomi delle tue immagini dei nemici
+const enemyImagesSrc = [
+    'img/cars/enemy_01.png', 
+    'img/cars/enemy_02.png', 
+    'img/cars/enemy_03.png'
+];
+
+// Pre-carichiamo le immagini in memoria
+const enemySprites = enemyImagesSrc.map(src => {
+    let img = new Image();
+    img.src = src;
+    return img;
+});
+
+// Colori di backup se l'immagine non carica
+const enemyColors = ['#2196F3', '#FFEB3B', '#4CAF50', '#9C27B0', '#FF9800'];
 
 function resetTraffic() {
     enemies = [];
@@ -21,8 +37,6 @@ function isContromano() {
 }
 
 function manageEnemies() {
-    // 1. GENERAZIONE (Spawn)
-    // --- NON SPUNTA NESSUNO FINCHÈ L'ANIMAZIONE NON È FINITA ---
     if (frames % enemySpawnRate === 0 && !player.isStarting) {
         const lane = Math.floor(Math.random() * 4); 
         const laneWidth = canvas.width / 4;
@@ -34,8 +48,6 @@ function manageEnemies() {
 
         const ey = relSpeed > 0 ? -100 : canvas.height + 150;
 
-        // --- CONTROLLO ANTI-SOVRAPPOSIZIONE ALLO SPAWN ---
-        // Evita che due macchine spawnino troppo vicine nella stessa corsia
         let canSpawn = true;
         for (let j = 0; j < enemies.length; j++) {
             if (enemies[j].lane === lane && Math.abs(enemies[j].y - ey) < 180) {
@@ -45,12 +57,17 @@ function manageEnemies() {
         }
 
         if (canSpawn) {
+            // Assegna uno sprite casuale
+            let randomSprite = enemySprites[Math.floor(Math.random() * enemySprites.length)];
+            let randomColor = enemyColors[Math.floor(Math.random() * enemyColors.length)];
+
             enemies.push({
                 x: (lane * laneWidth) + (laneWidth / 2) - 20, 
                 y: ey, 
                 width: 40, height: 70, 
                 absSpeed: absSpeed, isOncoming: isOncoming, lane: lane,
-                color: enemyColors[Math.floor(Math.random() * enemyColors.length)],
+                sprite: randomSprite,
+                colorBackup: randomColor,
                 passed: false,
                 isChanging: false, targetX: 0, 
                 indicator: null, indicatorTimer: 0,
@@ -59,42 +76,31 @@ function manageEnemies() {
         }
     }
 
-    // 2. LOGICA E MOVIMENTO
     for (let i = enemies.length - 1; i >= 0; i--) {
         let e = enemies[i];
         
-        // --- EVITAMENTO INCIDENTI CON ALTRI NEMICI (MIGLIORATO) ---
+        // Evitamento incidenti tra nemici
         for (let j = 0; j < enemies.length; j++) {
             if (i === j) continue;
             let other = enemies[j];
-            
-            // Se sono nella stessa corsia e direzione, e non stanno cambiando corsia
             if (e.lane === other.lane && e.isOncoming === other.isOncoming && !e.isChanging && !other.isChanging) {
                 if (!e.isOncoming) {
-                    // Stessa direzione: se "e" è dietro "other" (e.y maggiore)
                     let distance = e.y - other.y;
                     if (distance > 0 && distance < 140) {
-                        if (distance < 80) {
-                            e.absSpeed = Math.max(1, other.absSpeed - 0.5); // Frena bruscamente per creare distacco
-                        } else if (e.absSpeed > other.absSpeed) {
-                            e.absSpeed = other.absSpeed; // Mantiene semplicemente la distanza
-                        }
+                        if (distance < 80) e.absSpeed = Math.max(1, other.absSpeed - 0.5); 
+                        else if (e.absSpeed > other.absSpeed) e.absSpeed = other.absSpeed;
                     }
                 } else {
-                    // Contromano: siccome scendono, se "other" è dietro "e" (other.y maggiore)
                     let distance = other.y - e.y;
                     if (distance > 0 && distance < 140) {
-                        if (distance < 80) {
-                            e.absSpeed = Math.max(1, other.absSpeed - 0.5); // Frenata per distanziamento
-                        } else if (e.absSpeed > other.absSpeed) {
-                            e.absSpeed = other.absSpeed;
-                        }
+                        if (distance < 80) e.absSpeed = Math.max(1, other.absSpeed - 0.5);
+                        else if (e.absSpeed > other.absSpeed) e.absSpeed = other.absSpeed;
                     }
                 }
             }
         }
 
-        // --- EVITAMENTO INCIDENTI CON IL GIOCATORE ---
+        // Evitamento incidenti con giocatore
         if (!e.isOncoming && !e.isChanging) {
             if (Math.abs((e.x + e.width/2) - (player.x + player.width/2)) < 35) {
                 let distanceToPlayer = e.y - (player.y + player.height);
@@ -107,7 +113,7 @@ function manageEnemies() {
         let relSpeed = e.isOncoming ? (player.speedZ + e.absSpeed) : (player.speedZ - e.absSpeed);
         e.y += relSpeed; 
 
-        // --- CAMBIO CORSIA INTELLIGENTE (SICURO) ---
+        // Cambio corsia
         if (!e.isChanging && !e.isOncoming && Math.random() < 0.005) {
             let nextLane = e.lane + (Math.random() < 0.5 ? -1 : 1);
             if (nextLane >= 2 && nextLane <= 3) {
@@ -115,7 +121,6 @@ function manageEnemies() {
                 for (let j = 0; j < enemies.length; j++) {
                     if (i === j) continue;
                     let other = enemies[j];
-                    // Distanza di sicurezza molto ampia prima di cambiare corsia (160px)
                     if (other.lane === nextLane && Math.abs(e.y - other.y) < 160) {
                         canChange = false;
                         break;
@@ -144,21 +149,35 @@ function manageEnemies() {
             }
         }
 
-        // --- DISEGNO AUTO E FRECCE ---
-        ctx.fillStyle = e.color;
-        ctx.fillRect(e.x, e.y, e.width, e.height);
+        // DISEGNO AUTO NEMICA (Immagine se caricata, altrimenti colore backup)
+        if (e.sprite && e.sprite.complete && e.sprite.naturalHeight !== 0) {
+            // Se l'auto viene in senso opposto, potremmo ruotarla, ma per semplicità assumiamo 
+            // che hai sprites orientati bene o che si girino col ctx
+            if (e.isOncoming) {
+                ctx.save();
+                ctx.translate(e.x + e.width/2, e.y + e.height/2);
+                ctx.rotate(Math.PI); // Gira l'immagine di 180 gradi
+                ctx.drawImage(e.sprite, -e.width/2, -e.height/2, e.width, e.height);
+                ctx.restore();
+            } else {
+                ctx.drawImage(e.sprite, e.x, e.y, e.width, e.height);
+            }
+        } else {
+            // Backup grafico se l'immagine manca
+            ctx.fillStyle = e.colorBackup;
+            ctx.fillRect(e.x, e.y, e.width, e.height);
+            ctx.fillStyle = '#111';
+            ctx.fillRect(e.x + 5, e.y + (e.isOncoming ? 45 : 10), e.width - 10, 15); 
+            ctx.fillRect(e.x + 5, e.y + (e.isOncoming ? 10 : 45), e.width - 10, 15);
+        }
         
+        // Frecce direzionali dei nemici
         if (e.indicator && !e.isBastard && Math.floor(frames / 8) % 2 === 0) {
             ctx.fillStyle = '#FF9800'; 
             let fx = e.indicator === 'left' ? e.x - 2 : e.x + e.width - 6;
             ctx.fillRect(fx, e.y + (e.isOncoming ? 0 : e.height - 8), 8, 8);
         }
 
-        ctx.fillStyle = '#111';
-        ctx.fillRect(e.x + 5, e.y + (e.isOncoming ? 45 : 10), e.width - 10, 15); 
-        ctx.fillRect(e.x + 5, e.y + (e.isOncoming ? 10 : 45), e.width - 10, 15);
-
-        // Disabilita le collisioni mortali durante l'animazione per estrema sicurezza
         if (!player.isStarting) {
             if (player.x < e.x + e.width && player.x + player.width > e.x &&
                 player.y < e.y + e.height && player.y + player.height > e.y) {
