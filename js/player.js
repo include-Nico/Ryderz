@@ -6,6 +6,8 @@ const player = {
     shiftDelay: 0, isIgniting: true, isStarting: false 
 };
 
+let playerSprite = new Image();
+
 function resetPlayer() {
     player.x = canvas.width - 45; 
     player.y = canvas.height - 120;
@@ -16,9 +18,14 @@ function resetPlayer() {
     player.isIgniting = true; 
     player.isStarting = false;
     
-    player.speedX = playerProfile.stats.handling;
-    player.accelRate = playerProfile.stats.acceleration;
-    player.maxSpeedZ = playerProfile.stats.maxSpeed;
+    // Prende l'auto equipaggiata dal catalogo
+    let currentCar = carCatalog.find(c => c.id === playerProfile.equippedCarId);
+    if(!currentCar) currentCar = carCatalog[0];
+
+    playerSprite.src = currentCar.imgGame; // Carica l'immagine top-down
+    player.speedX = currentCar.stats.handling;
+    player.accelRate = currentCar.stats.acceleration;
+    player.maxSpeedZ = currentCar.stats.maxSpeed;
     player.speedZ = 0;
     player.minSpeedZ = 1; 
 }
@@ -69,7 +76,6 @@ function updatePlayer() {
 
     if (player.isStarting) {
         player.speedZ += 0.015;
-        // Spostamento verso sinistra per immettersi in corsia
         if (player.speedZ > 0.4) player.x -= 0.6; 
         if (player.speedZ >= 1.0 && player.x <= canvas.width - 100) {
             player.speedZ = 1.0;
@@ -87,10 +93,8 @@ function updatePlayer() {
     } else {
         if (player.isAccelerating) {
             player.hasAcceleratedOnce = true; 
-            // PROGRESSIONE DIFFICILE: L'accelerazione cala man mano che aumenti la velocità
             let resistance = player.speedZ / (player.maxSpeedZ * 1.2);
             player.speedZ += player.accelRate * (1 - resistance); 
-            
             if (player.speedZ > player.maxSpeedZ) player.speedZ = player.maxSpeedZ;
         } else {
             player.speedZ -= 0.1; 
@@ -100,20 +104,18 @@ function updatePlayer() {
 }
 
 function drawPlayer() {
-    ctx.fillStyle = '#ff2a2a'; 
-    ctx.fillRect(player.x, player.y, player.width, player.height);
+    // Disegna l'immagine dell'auto (se caricata), altrimenti un rettangolo rosso di backup
+    if (playerSprite.complete && playerSprite.naturalHeight !== 0) {
+        ctx.drawImage(playerSprite, player.x, player.y, player.width, player.height);
+    } else {
+        ctx.fillStyle = '#ff2a2a'; 
+        ctx.fillRect(player.x, player.y, player.width, player.height);
+    }
     
-    // --- FRECCIA SINISTRA LAMPEGGIANTE DURANTE L'IMMISSIONE ---
+    // Freccia sinistra lampeggiante per l'immissione in autostrada
     if (player.isStarting && typeof frames !== 'undefined' && Math.floor(frames / 8) % 2 === 0) {
-        ctx.fillStyle = '#FF9800'; // Arancione brillante per la freccia
-        // Indicatore anteriore sinistro
+        ctx.fillStyle = '#FF9800'; 
         ctx.fillRect(player.x - 2, player.y + 2, 8, 8);
-        // Indicatore posteriore sinistro
         ctx.fillRect(player.x - 2, player.y + player.height - 10, 8, 8);
     }
-
-    // Finestrini dell'auto
-    ctx.fillStyle = '#111';
-    ctx.fillRect(player.x + 5, player.y + 10, player.width - 10, 15);
-    ctx.fillRect(player.x + 5, player.y + 45, player.width - 10, 15);
 }
