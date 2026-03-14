@@ -1,24 +1,12 @@
 // --- L'AUTO DEL GIOCATORE ---
 const player = {
-    x: 0, 
-    y: 0, 
-    width: 40, 
-    height: 70, 
-    speedX: 0,      
-    dx: 0,          
-    speedZ: 0,      
-    maxSpeedZ: 0,  
-    minSpeedZ: 1,   // <--- CORRETTO: Velocità minima a 10 km/h
-    accelRate: 0,
-    isAccelerating: false,
-    hasAcceleratedOnce: false, 
-    shiftDelay: 0, 
-    isIgniting: true, 
-    isStarting: false 
+    x: 0, y: 0, width: 40, height: 70, 
+    speedX: 0, dx: 0, speedZ: 0, maxSpeedZ: 0, minSpeedZ: 1, 
+    accelRate: 0, isAccelerating: false, hasAcceleratedOnce: false, 
+    shiftDelay: 0, isIgniting: true, isStarting: false 
 };
 
 function resetPlayer() {
-    // Parte fuori dalla strada, nell'area SOS a destra
     player.x = canvas.width - 45; 
     player.y = canvas.height - 120;
     player.dx = 0;
@@ -31,14 +19,12 @@ function resetPlayer() {
     player.speedX = playerProfile.stats.handling;
     player.accelRate = playerProfile.stats.acceleration;
     player.maxSpeedZ = playerProfile.stats.maxSpeed;
-    player.speedZ = 0; // Parte da zero assoluto
-    player.minSpeedZ = 1; // <--- CORRETTO: Minimo a 10 km/h
+    player.speedZ = 0;
+    player.minSpeedZ = 1; 
 }
 
-// --- COMANDI BLOCCATI DURANTE L'AVVIO ---
 document.addEventListener('keydown', (e) => {
     if (isGameOver || (typeof isPaused !== 'undefined' && isPaused) || player.isIgniting || player.isStarting) return;
-    
     const key = e.key.toLowerCase();
     if (key === 'a' || key === 'arrowleft') player.dx = -player.speedX;
     else if (key === 'd' || key === 'arrowright') player.dx = player.speedX;
@@ -46,7 +32,6 @@ document.addEventListener('keydown', (e) => {
 });
 
 document.addEventListener('keyup', (e) => {
-    if (player.isIgniting || player.isStarting) return;
     const key = e.key.toLowerCase();
     if (key === 'a' || key === 'arrowleft' || key === 'd' || key === 'arrowright') player.dx = 0;
     else if (key === 'w' || key === 'arrowup') player.isAccelerating = false;
@@ -74,38 +59,24 @@ function setupTouchControls() {
     }, { passive: false });
 
     canvas.addEventListener('touchend', () => {
-        if (player.isIgniting || player.isStarting) return;
         isDragging = false;
         player.isAccelerating = false; 
     });
 }
 
-// --- FISICA DELL'ACCENSIONE E IMMISSIONE ---
 function updatePlayer() {
-    // FASE 1: Accensione (Macchina immobile)
-    if (player.isIgniting) {
-        player.speedZ = 0;
-        return;
-    }
+    if (player.isIgniting) return;
 
-    // FASE 2: Partenza automatica (0 a 10 km/h)
     if (player.isStarting) {
-        player.speedZ += 0.015; // Accelerazione dolce iniziale
-        
-        // Inizia a sterzare a sinistra dopo i primi metri
-        if (player.speedZ > 0.4) {
-            player.x -= 0.6; 
-        }
-
-        // Una volta raggiunti i 10 km/h (speedZ = 1.0) e rientrato in corsia
+        player.speedZ += 0.015;
+        if (player.speedZ > 0.4) player.x -= 0.6; 
         if (player.speedZ >= 1.0 && player.x <= canvas.width - 100) {
-            player.speedZ = 1.0; // Fissa la velocità a 10 esatti
-            player.isStarting = false; // Restituisce i comandi
+            player.speedZ = 1.0;
+            player.isStarting = false;
         }
         return;
     }
 
-    // LOGICA DI GIOCO NORMALE
     player.x += player.dx;
     if (player.x < 10) player.x = 10;
     if (player.x + player.width > canvas.width - 10) player.x = canvas.width - player.width - 10;
@@ -115,7 +86,10 @@ function updatePlayer() {
     } else {
         if (player.isAccelerating) {
             player.hasAcceleratedOnce = true; 
-            player.speedZ += player.accelRate; 
+            // PROGRESSIONE DIFFICILE: L'accelerazione cala man mano che aumenti la velocità
+            let resistance = player.speedZ / (player.maxSpeedZ * 1.2);
+            player.speedZ += player.accelRate * (1 - resistance); 
+            
             if (player.speedZ > player.maxSpeedZ) player.speedZ = player.maxSpeedZ;
         } else {
             player.speedZ -= 0.1; 
