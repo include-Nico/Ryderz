@@ -9,12 +9,13 @@ let isPaused = false;
 let roadOffset = 0;
 let touchInitialized = false;
 let currentGear = 1;
+let pitchDrop = 0; // Nuova variabile per calo giri motore
 
 // --- AUDIO DI GIOCO ---
 const engineSound = new Audio('audio/engine.mp3');
 engineSound.loop = true;
 engineSound.volume = 0.5;
-engineSound.preservesPitch = false; // Fondamentale: permette al pitch di salire e scendere!
+engineSound.preservesPitch = false; 
 
 const crashSound = new Audio('audio/crash.mp3');
 crashSound.volume = 1.0;
@@ -27,6 +28,7 @@ function initGame() {
     score = 0;
     roadOffset = 0;
     currentGear = 1;
+    pitchDrop = 0;
     isGameOver = false;
     isPaused = false; 
     
@@ -44,7 +46,6 @@ function initGame() {
         touchInitialized = true;
     }
     
-    // Fai partire il rumore del motore al minimo
     engineSound.playbackRate = 0.8;
     engineSound.play().catch(e => console.log("Audio bloccato dal browser all'avvio"));
 
@@ -61,10 +62,10 @@ function togglePause() {
         if (pauseMenu) pauseMenu.style.display = 'flex';
         player.dx = 0;
         player.isAccelerating = false;
-        engineSound.pause(); // Metti in pausa il motore
+        engineSound.pause(); 
     } else {
         if (pauseMenu) pauseMenu.style.display = 'none';
-        engineSound.play(); // Riprendi il motore
+        engineSound.play(); 
         runGameLoop(); 
     }
 }
@@ -101,7 +102,11 @@ function runGameLoop() {
     updateScore();        
 
     // --- MODULA IL PITCH DEL MOTORE ---
-    let pitch = 0.8 + (player.speedZ / playerProfile.stats.maxSpeed) * 1.5;
+    if (pitchDrop > 0) {
+        pitchDrop -= 0.03; // I giri del motore risalgono gradualmente dopo la cambiata
+        if (pitchDrop < 0) pitchDrop = 0;
+    }
+    let pitch = 0.8 + (player.speedZ / playerProfile.stats.maxSpeed) * 1.5 - pitchDrop;
     engineSound.playbackRate = Math.max(0.5, Math.min(pitch, 2.5));
 
     frames++;
@@ -146,21 +151,17 @@ function updateScoreDisplay() {
         let visualSpeed = Math.floor(player.speedZ * 10); 
         speedElement.innerText = `${visualSpeed} km/h`;
 
-        // Calcolo della marcia
         let newGear = 1;
         if (visualSpeed > 100) newGear = 5;
         else if (visualSpeed > 75) newGear = 4;
         else if (visualSpeed > 50) newGear = 3;
         else if (visualSpeed > 35) newGear = 2;
 
-        // --- SIMULAZIONE CAMBIO MARCIA ---
+        // --- SIMULAZIONE CAMBIO MARCIA (FRIZIONE) ---
         if (newGear > currentGear) {
-            // 1. Resetta l'audio all'inizio del file
-            engineSound.currentTime = 0; 
-            
-            // 2. Togli un po' di velocità per simulare la frizione e far calare il pitch del motore
-            player.speedZ -= 0.8; 
-            if (player.speedZ < player.minSpeedZ) player.speedZ = player.minSpeedZ;
+            engineSound.currentTime = 0; // Spezza l'audio
+            player.shiftDelay = 15; // Mantiene la velocità costante per 1/4 di secondo (15 frame) senza accelerare
+            pitchDrop = 0.6; // Simula il crollo dei giri motore (RPM)
         }
         currentGear = newGear; 
 
