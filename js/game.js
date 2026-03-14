@@ -1,5 +1,5 @@
-// --- VARIABILI GLOBALI -- (Non toccare, prevengono conflitti con traffic.js e player.js)
-let canvas, ctx, frames = 0, gameLoopId, score = 0, isGameOver = false, isPaused = false, roadOffset = 0, totalDistance = 0, touchInitialized = false, currentGear = 1, pitchDrop = 0; 
+// --- VARIABILI GLOBALI --
+let canvas, ctx, frames = 0, gameLoopId, score = 0, isGameOver = false, isPaused = false, roadOffset = 0, totalDistance = 0, currentGear = 1, pitchDrop = 0; 
 
 // --- AUDIO GLOBALE GIOCO ---
 window.ignitionSound = new Audio('audio/ignition.mp3');
@@ -18,7 +18,9 @@ function initGame() {
     frames = 0; score = 0; roadOffset = 0; totalDistance = 0; currentGear = 1; pitchDrop = 0; isGameOver = false; isPaused = false; 
     resetPlayer();  
     resetTraffic(); 
-    if (!touchInitialized) { setupTouchControls(); touchInitialized = true; }
+    
+    // Ricarichiamo SEMPRE i controlli touch, altrimenti dalla seconda partita smettono di funzionare!
+    setupTouchControls(); 
 
     // Controllo Audio per l'accensione
     if (window.isAudioEnabled) {
@@ -120,22 +122,18 @@ function drawRoad() {
 
     // 5. AREA DI SOSTA - Chiusura morbida ad imbuto
     if (totalDistance < 1500) { 
-        // Inizia più in alto per permettere al giocatore di accorgersi che la corsia si chiude
         let sostaY = totalDistance - 200; 
+        let areaWidth = 60;    
+        let taperLength = 250; 
         
-        let areaWidth = 60;    // Larghezza dell'area di sosta
-        let taperLength = 250; // Lunghezza del restringimento (scivolo per rientrare in autostrada)
-        
-        // A. Disegna il pavimento scuro della piazzola
         ctx.fillStyle = '#2A2A2A'; 
         ctx.beginPath();
-        ctx.moveTo(canvas.width, sostaY); // Punta di fusione in corsia
-        ctx.lineTo(canvas.width - areaWidth, sostaY + taperLength); // Inizio dell'imbuto
-        ctx.lineTo(canvas.width - areaWidth, sostaY + 1800); // Lunga oltre il limite visivo
+        ctx.moveTo(canvas.width, sostaY); 
+        ctx.lineTo(canvas.width - areaWidth, sostaY + taperLength); 
+        ctx.lineTo(canvas.width - areaWidth, sostaY + 1800); 
         ctx.lineTo(canvas.width, sostaY + 1800);
         ctx.fill();
 
-        // B. Striscia bianca continua laterale (diagonale + dritta)
         ctx.strokeStyle = 'white';
         ctx.lineWidth = 4;
         ctx.beginPath();
@@ -144,7 +142,6 @@ function drawRoad() {
         ctx.lineTo(canvas.width - areaWidth, sostaY + 1800);
         ctx.stroke();
 
-        // C. Testo "AREA SOS" ruotato e dipinto sull'asfalto
         let textY = sostaY + taperLength + 100;
         if (textY > -100 && textY < canvas.height + 200) {
             ctx.save();
@@ -176,7 +173,6 @@ function updateScoreDisplay() {
     
     let visualSpeed = Math.floor(player.speedZ * 10);
     
-    // --- LOGICA 6 MARCE ---
     let newGear = 1;
     if (visualSpeed > 125) newGear = 6;      
     else if (visualSpeed > 100) newGear = 5;
