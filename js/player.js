@@ -1,88 +1,82 @@
+// --- L'AUTO DEL GIOCATORE ---
 window.player = {
-    x: 0, y: 0,
-    width: 40, height: 70,
-    speedX:   5,
-    dx:       0,
-    speedZ:   0,
-    maxSpeedZ: 15,
-    accelRate: 0.04,
-    isAccelerating: false,
-    isStarting: false
+    x: 0, y: 0, width: 40, height: 70,
+    speedX: 0, dx: 0, speedZ: 0, maxSpeedZ: 0,
+    accelRate: 0, isAccelerating: false, isStarting: false, isIgniting: false
 };
 
 window.playerSprite = new Image();
 
 function resetPlayer() {
     const canvas = document.getElementById('gameCanvas');
+    if (!canvas) return;
 
-    window.player.x  = canvas ? (canvas.width  / 2 - 20) : 180;
-    window.player.y  = canvas ? (canvas.height - 120)     : 480;
-    window.player.speedZ = 0;
-    window.player.dx     = 0;
-    window.player.isAccelerating = false;
-    window.player.isStarting     = false;
+    // Posizione iniziale (Area SOS)
+    player.x = canvas.width - 60;
+    player.y = canvas.height - 120;
+    player.speedZ = 0;
+    player.dx = 0;
+    player.isStarting = true;
+    player.isIgniting = false;
 
-    // Sicurezza: ricarica profilo
-    if (!window.playerProfile) {
-        window.playerProfile = JSON.parse(localStorage.getItem('ryderzProfileV4'));
-    }
-
+    // Recupero auto e potenziamenti dal profilo globale
     const profile = window.playerProfile;
-    if (!profile) return;
+    const carData = window.carCatalog.find(c => c.id === profile.equippedCarId) || window.carCatalog[0];
+    const up = profile.upgrades[carData.id] || { speed: 0, handling: 0, accel: 0 };
 
-    const baseCar = (window.carCatalog || []).find(c => c.id === profile.equippedCarId)
-                    || (window.carCatalog || [])[0];
-    if (!baseCar) return;
-
-    const up = (profile.upgrades && profile.upgrades[baseCar.id])
-               ? profile.upgrades[baseCar.id]
-               : { speed: 0, handling: 0, accel: 0 };
-
-    // Calcolo statistiche con bonus officina (5% per livello)
-    window.player.maxSpeedZ  = baseCar.baseStats.maxSpeed     * (1 + up.speed    * 0.05);
-    window.player.speedX     = baseCar.baseStats.handling     * (1 + up.handling * 0.05);
-    window.player.accelRate  = baseCar.baseStats.acceleration * (1 + up.accel    * 0.05);
-
-    window.playerSprite.src = baseCar.imgGame;
+    // Applica Bonus (+5% per ogni livello dell'officina)
+    player.maxSpeedZ = carData.baseStats.maxSpeed * (1 + (up.speed * 0.05));
+    player.speedX = carData.baseStats.handling * (1 + (up.handling * 0.05));
+    player.accelRate = carData.baseStats.acceleration * (1 + (up.accel * 0.05));
+    
+    playerSprite.src = carData.imgGame;
 }
 
 function updatePlayer() {
-    // Movimento laterale
-    window.player.x += window.player.dx;
+    if (player.isStarting) {
+        player.speedZ += 0.02;
+        if (player.speedZ > 0.5) player.x -= 0.8; 
+        if (player.x <= canvas.width / 2 + 20) player.isStarting = false;
+        return;
+    }
 
-    // Limiti pista (canvas 400px, bordi ~14px)
-    const minX = 14;
-    const maxX = (canvas ? canvas.width : 400) - 14 - window.player.width;
-    if (window.player.x < minX) window.player.x = minX;
-    if (window.player.x > maxX) window.player.x = maxX;
+    player.x += player.dx;
+    
+    // Limiti carreggiata
+    if (player.x < 10) player.x = 10;
+    if (player.x > canvas.width - 50) player.x = canvas.width - 50;
 
-    // Accelerazione / Attrito
-    if (window.player.isAccelerating) {
-        window.player.speedZ += window.player.accelRate;
-        if (window.player.speedZ > window.player.maxSpeedZ) {
-            window.player.speedZ = window.player.maxSpeedZ;
-        }
+    if (player.isAccelerating) {
+        player.speedZ += player.accelRate;
+        if (player.speedZ > player.maxSpeedZ) player.speedZ = player.maxSpeedZ;
     } else {
-        window.player.speedZ *= 0.95;
-        if (window.player.speedZ < 0.01) window.player.speedZ = 0;
+        player.speedZ *= 0.97; // Attrito
     }
 }
 
 function drawPlayer() {
-    if (!canvas) return;
-    const context = canvas.getContext('2d');
-    if (window.playerSprite.complete && window.playerSprite.naturalWidth > 0) {
-        context.drawImage(window.playerSprite,
-            window.player.x - 8,
-            window.player.y - 14,
-            56, 98
-        );
+    const ctx = document.getElementById('gameCanvas').getContext('2d');
+    if (playerSprite.complete) {
+        // Disegno maggiorato (56x98) per coprire bene la hitbox
+        ctx.drawImage(playerSprite, player.x - 8, player.y - 14, 56, 98);
     } else {
-        // Fallback grafico se lo sprite non è ancora caricato
-        context.fillStyle = '#00F0FF';
-        context.beginPath();
-        context.roundRect(window.player.x, window.player.y,
-                          window.player.width, window.player.height, 6);
-        context.fill();
+        ctx.fillStyle = 'red';
+        ctx.fillRect(player.x, player.y, player.width, player.height);
     }
+}
+
+function setupTouchControls() {
+    const cvs = document.getElementById('gameCanvas');
+    cvs.addEventListener('touchstart', (e) => { 
+        player.isAccelerating = true; 
+    }, {passive: false});
+    cvs.addEventListener('touchend', () => { 
+        player.isAccelerating = false; 
+        player.dx = 0;
+    }, {passive: false});
+    cvs.addEventListener('touchmove', (e) => {
+        const touchX = e.touches[0].clientX - cvs.offsetLeft;
+        if (touchX < player.x + player.width/2) player.dx = -player.speedX;
+        else player.dx = player.speedX;
+    }, {passive: false});
 }
