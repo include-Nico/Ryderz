@@ -1,211 +1,37 @@
-// --- VARIABILI DEL TRAFFICO ---
 let enemies = [];
-let enemySpawnRate = 80; 
-let liscioEffects = []; 
+const enemyImagesSrc = ['img/cars/enemy_01.png', 'img/cars/enemy_02.png'];
+let enemySprites = enemyImagesSrc.map(s => { let i = new Image(); i.src = s; return i; });
 
-const enemyImagesSrc = [
-    'img/cars/enemy_01.png', 
-    'img/cars/enemy_02.png', 
-    'img/cars/enemy_03.png'
-];
-
-const enemySprites = enemyImagesSrc.map(src => {
-    let img = new Image();
-    img.src = src;
-    return img;
-});
-
-const enemyColors = ['#2196F3', '#FFEB3B', '#4CAF50', '#9C27B0', '#FF9800'];
-
-function resetTraffic() {
-    enemies = [];
-    liscioEffects = [];
-    enemySpawnRate = 80; 
-}
-
-function increaseDifficulty() {
-    if (frames % 600 === 0 && enemySpawnRate > 30) {
-        enemySpawnRate -= 5; 
-    }
-}
-
-function isContromano() {
-    return (player.x + player.width / 2) < (canvas.width / 2);
-}
+function resetTraffic() { enemies = []; }
 
 function manageEnemies() {
-    if (frames % enemySpawnRate === 0 && !player.isStarting) {
-        const lane = Math.floor(Math.random() * 4); 
-        const laneWidth = canvas.width / 4;
-        const isOncoming = lane < 2; 
-        const absSpeed = isOncoming ? (Math.random() * 4 + 6) : (Math.random() * 3 + 4); 
-        const relSpeed = isOncoming ? (player.speedZ + absSpeed) : (player.speedZ - absSpeed);
-        
-        if (!player.hasAcceleratedOnce && relSpeed < 0) return;
-
-        const ey = relSpeed > 0 ? -100 : canvas.height + 150;
-
-        let canSpawn = true;
-        for (let j = 0; j < enemies.length; j++) {
-            if (enemies[j].lane === lane && Math.abs(enemies[j].y - ey) < 180) {
-                canSpawn = false;
-                break;
-            }
-        }
-
-        if (canSpawn) {
-            let randomSprite = enemySprites[Math.floor(Math.random() * enemySprites.length)];
-            let randomColor = enemyColors[Math.floor(Math.random() * enemyColors.length)];
-
-            enemies.push({
-                x: (lane * laneWidth) + (laneWidth / 2) - 20, 
-                y: ey, 
-                width: 40, height: 70, 
-                absSpeed: absSpeed, isOncoming: isOncoming, lane: lane,
-                sprite: randomSprite,
-                colorBackup: randomColor,
-                passed: false,
-                isChanging: false, targetX: 0, 
-                indicator: null, indicatorTimer: 0,
-                isBastard: (score > 1000 && Math.random() < 0.15) 
-            });
-        }
+    if (frames % 80 === 0 && !player.isStarting) {
+        let lane = Math.floor(Math.random() * 4);
+        enemies.push({
+            x: lane * (canvas.width/4) + 10,
+            y: -100,
+            width: 40, height: 70,
+            speed: Math.random() * 3 + 5,
+            sprite: enemySprites[Math.floor(Math.random() * enemySprites.length)]
+        });
     }
 
     for (let i = enemies.length - 1; i >= 0; i--) {
         let e = enemies[i];
+        e.y += (player.speedZ > 0) ? (e.speed - player.speedZ) : e.speed;
         
-        for (let j = 0; j < enemies.length; j++) {
-            if (i === j) continue;
-            let other = enemies[j];
-            if (e.lane === other.lane && e.isOncoming === other.isOncoming && !e.isChanging && !other.isChanging) {
-                if (!e.isOncoming) {
-                    let distance = e.y - other.y;
-                    if (distance > 0 && distance < 140) {
-                        if (distance < 80) e.absSpeed = Math.max(1, other.absSpeed - 0.5); 
-                        else if (e.absSpeed > other.absSpeed) e.absSpeed = other.absSpeed;
-                    }
-                } else {
-                    let distance = other.y - e.y;
-                    if (distance > 0 && distance < 140) {
-                        if (distance < 80) e.absSpeed = Math.max(1, other.absSpeed - 0.5);
-                        else if (e.absSpeed > other.absSpeed) e.absSpeed = other.absSpeed;
-                    }
-                }
-            }
+        // Disegno
+        if(e.sprite.complete) ctx.drawImage(e.sprite, e.x-8, e.y-14, 56, 98);
+        else { ctx.fillStyle='blue'; ctx.fillRect(e.x, e.y, e.width, e.height); }
+
+        // Collisione
+        if (player.x < e.x + e.width && player.x + player.width > e.x &&
+            player.y < e.y + e.height && player.y + player.height > e.y) {
+            triggerGameOver();
         }
 
-        if (!e.isOncoming && !e.isChanging) {
-            if (Math.abs((e.x + e.width/2) - (player.x + player.width/2)) < 35) {
-                let distanceToPlayer = e.y - (player.y + player.height);
-                if (distanceToPlayer > 0 && distanceToPlayer < 120 && e.absSpeed > player.speedZ) {
-                    e.absSpeed = player.speedZ; 
-                }
-            }
-        }
-
-        let relSpeed = e.isOncoming ? (player.speedZ + e.absSpeed) : (player.speedZ - e.absSpeed);
-        e.y += relSpeed; 
-
-        if (!e.isChanging && !e.isOncoming && Math.random() < 0.005) {
-            let nextLane = e.lane + (Math.random() < 0.5 ? -1 : 1);
-            if (nextLane >= 2 && nextLane <= 3) {
-                let canChange = true;
-                for (let j = 0; j < enemies.length; j++) {
-                    if (i === j) continue;
-                    let other = enemies[j];
-                    if (other.lane === nextLane && Math.abs(e.y - other.y) < 160) {
-                        canChange = false;
-                        break;
-                    }
-                }
-                if (canChange) {
-                    e.isChanging = true;
-                    e.targetX = (nextLane * (canvas.width / 4)) + (canvas.width / 8) - 20;
-                    e.indicator = nextLane > e.lane ? 'right' : 'left';
-                    e.indicatorTimer = 50; 
-                    e.lane = nextLane;
-                }
-            }
-        }
-
-        if (e.isChanging) {
-            if (e.indicatorTimer > 0) e.indicatorTimer--; 
-            else {
-                let diff = e.targetX - e.x;
-                e.x += diff * 0.08; 
-                if (Math.abs(diff) < 2) {
-                    e.x = e.targetX;
-                    e.isChanging = false;
-                    e.indicator = null;
-                }
-            }
-        }
-
-        // DISEGNO AUTO NEMICA (Visuale 56x98)
-        if (e.sprite && e.sprite.complete && e.sprite.naturalHeight !== 0) {
-            let drawW = e.width + 16;
-            let drawH = e.height + 28;
-            if (e.isOncoming) {
-                ctx.save();
-                ctx.translate(e.x + e.width/2, e.y + e.height/2);
-                ctx.rotate(Math.PI); 
-                // Disegno centrato rispetto alla hitbox reale
-                ctx.drawImage(e.sprite, -drawW/2, -drawH/2, drawW, drawH);
-                ctx.restore();
-            } else {
-                ctx.drawImage(e.sprite, e.x - 8, e.y - 14, drawW, drawH);
-            }
-        } else {
-            ctx.fillStyle = e.colorBackup;
-            ctx.fillRect(e.x, e.y, e.width, e.height);
-        }
-        
-        if (e.indicator && !e.isBastard && Math.floor(frames / 8) % 2 === 0) {
-            ctx.fillStyle = '#FF9800'; 
-            let fx = e.indicator === 'left' ? e.x - 2 : e.x + e.width - 6;
-            ctx.fillRect(fx, e.y + (e.isOncoming ? 0 : e.height - 8), 8, 8);
-        }
-
-        if (!player.isStarting) {
-            if (player.x < e.x + e.width && player.x + player.width > e.x &&
-                player.y < e.y + e.height && player.y + player.height > e.y) {
-                triggerGameOver(); 
-            }
-        }
-
-        if (!e.passed && relSpeed > 0 && e.y > player.y + player.height) {
-            e.passed = true;
-            let multiplier = isContromano() ? 2 : 1;
-            score += 10 * multiplier; 
-            const centerPlayer = player.x + player.width / 2;
-            const centerEnemy = e.x + e.width / 2;
-            const distance = Math.abs(centerPlayer - centerEnemy);
-            if (distance > 40 && distance < 65) {
-                let liscioPoints = 50 * multiplier;
-                score += liscioPoints; 
-                liscioEffects.push({ x: player.x, y: player.y, alpha: 1.0, points: liscioPoints }); 
-            }
-            updateScoreDisplay(); 
-        } 
-        else if (!e.passed && relSpeed < 0 && e.y + e.height < player.y) {
-            e.passed = true;
-        }
-
-        if ((relSpeed > 0 && e.y > canvas.height + 150) || (relSpeed < 0 && e.y < -150)) {
-            enemies.splice(i, 1);
-        }
+        if (e.y > canvas.height + 100 || e.y < -200) enemies.splice(i, 1);
     }
 }
 
-function drawLiscioEffects() {
-    for (let i = liscioEffects.length - 1; i >= 0; i--) {
-        let effect = liscioEffects[i];
-        ctx.fillStyle = effect.points >= 100 ? `rgba(255, 50, 50, ${effect.alpha})` : `rgba(255, 215, 0, ${effect.alpha})`; 
-        ctx.font = "bold 22px Arial";
-        ctx.fillText(`LISCIO! +${effect.points}`, effect.x - 30, effect.y - 20);
-        effect.y -= 2; 
-        effect.alpha -= 0.03; 
-        if (effect.alpha <= 0) liscioEffects.splice(i, 1);
-    }
-}
+function drawLiscioEffects() {}
