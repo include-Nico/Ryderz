@@ -1,107 +1,158 @@
-// --- L'AUTO DEL GIOCATORE ---
-const player = {
-    x: 0, y: 0, width: 40, height: 70, 
-    speedX: 0, dx: 0, speedZ: 0, maxSpeedZ: 0, minSpeedZ: 1, 
-    accelRate: 0, isAccelerating: false, hasAcceleratedOnce: false, 
-    shiftDelay: 0, isIgniting: true, isStarting: false 
-};
+// --- VARIABILI GLOBALI ---
+let canvas, ctx, frames = 0, gameLoopId, score = 0, isGameOver = false, isPaused = false, roadOffset = 0, totalDistance = 0, touchInitialized = false, currentGear = 1, pitchDrop = 0; 
 
-function resetPlayer() {
-    player.x = canvas.width - 45; 
-    player.y = canvas.height - 120;
-    player.dx = 0;
-    player.isAccelerating = false;
-    player.hasAcceleratedOnce = false; 
-    player.shiftDelay = 0; 
-    player.isIgniting = true; 
-    player.isStarting = false;
-    
-    player.speedX = playerProfile.stats.handling;
-    player.accelRate = playerProfile.stats.acceleration;
-    player.maxSpeedZ = playerProfile.stats.maxSpeed;
-    player.speedZ = 0;
-    player.minSpeedZ = 1; 
-}
+// --- AUDIO ---
+const ignitionSound = new Audio('audio/ignition.mp3');
+const engineSound = new Audio('audio/engine.wav'); 
+engineSound.loop = true;
+engineSound.preservesPitch = false; 
+const crashSound = new Audio('audio/crash.mp3');
 
-document.addEventListener('keydown', (e) => {
-    if (isGameOver || (typeof isPaused !== 'undefined' && isPaused) || player.isIgniting || player.isStarting) return;
-    const key = e.key.toLowerCase();
-    if (key === 'a' || key === 'arrowleft') player.dx = -player.speedX;
-    else if (key === 'd' || key === 'arrowright') player.dx = player.speedX;
-    if (key === 'w' || key === 'arrowup') player.isAccelerating = true;
+engineSound.addEventListener('timeupdate', function() {
+    if (this.duration && this.currentTime >= this.duration - 0.15) this.currentTime = 0; 
 });
 
-document.addEventListener('keyup', (e) => {
-    const key = e.key.toLowerCase();
-    if (key === 'a' || key === 'arrowleft' || key === 'd' || key === 'arrowright') player.dx = 0;
-    else if (key === 'w' || key === 'arrowup') player.isAccelerating = false;
-});
+function initGame() {
+    canvas = document.getElementById('gameCanvas');
+    ctx = canvas.getContext('2d');
+    frames = 0; score = 0; roadOffset = 0; totalDistance = 0; currentGear = 1; pitchDrop = 0; isGameOver = false; isPaused = false; 
+    resetPlayer();  
+    resetTraffic(); 
+    if (!touchInitialized) { setupTouchControls(); touchInitialized = true; }
 
-function setupTouchControls() {
-    let isDragging = false;
-    let previousTouchX = 0;
-
-    canvas.addEventListener('touchstart', (e) => {
-        if (isGameOver || (typeof isPaused !== 'undefined' && isPaused) || player.isIgniting || player.isStarting) return;
-        isDragging = true;
-        player.isAccelerating = true; 
-        previousTouchX = e.touches[0].clientX;
-    }, { passive: false });
-
-    canvas.addEventListener('touchmove', (e) => {
-        if (!isDragging || isGameOver || (typeof isPaused !== 'undefined' && isPaused) || player.isIgniting || player.isStarting) return;
-        e.preventDefault(); 
-        const currentTouchX = e.touches[0].clientX;
-        player.x += (currentTouchX - previousTouchX); 
-        if (player.x < 10) player.x = 10;
-        if (player.x + player.width > canvas.width - 10) player.x = canvas.width - player.width - 10;
-        previousTouchX = currentTouchX;
-    }, { passive: false });
-
-    canvas.addEventListener('touchend', () => {
-        isDragging = false;
-        player.isAccelerating = false; 
-    });
+    ignitionSound.currentTime = 0;
+    ignitionSound.play().catch(e => {});
+    ignitionSound.onended = () => {
+        player.isIgniting = false;
+        player.isStarting = true;
+        engineSound.play();
+    };
+    startEngine();
 }
 
-function updatePlayer() {
-    if (player.isIgniting) return;
-
-    if (player.isStarting) {
-        player.speedZ += 0.015;
-        if (player.speedZ > 0.4) player.x -= 0.6; 
-        if (player.speedZ >= 1.0 && player.x <= canvas.width - 100) {
-            player.speedZ = 1.0;
-            player.isStarting = false;
-        }
-        return;
-    }
-
-    player.x += player.dx;
-    if (player.x < 10) player.x = 10;
-    if (player.x + player.width > canvas.width - 10) player.x = canvas.width - player.width - 10;
-
-    if (player.shiftDelay > 0) {
-        player.shiftDelay--;
+function togglePause() {
+    if (isGameOver || player.isStarting) return; 
+    isPaused = !isPaused; 
+    const pauseMenu = document.getElementById('pause-menu');
+    if (isPaused) {
+        if (pauseMenu) pauseMenu.style.display = 'flex';
+        engineSound.pause(); 
     } else {
-        if (player.isAccelerating) {
-            player.hasAcceleratedOnce = true; 
-            // PROGRESSIONE DIFFICILE: L'accelerazione cala man mano che aumenti la velocità
-            let resistance = player.speedZ / (player.maxSpeedZ * 1.2);
-            player.speedZ += player.accelRate * (1 - resistance); 
-            
-            if (player.speedZ > player.maxSpeedZ) player.speedZ = player.maxSpeedZ;
-        } else {
-            player.speedZ -= 0.1; 
-            if (player.speedZ < player.minSpeedZ) player.speedZ = player.minSpeedZ;
-        }
+        if (pauseMenu) pauseMenu.style.display = 'none';
+        engineSound.play(); 
+        runGameLoop(); 
     }
 }
 
-function drawPlayer() {
-    ctx.fillStyle = '#ff2a2a'; 
-    ctx.fillRect(player.x, player.y, player.width, player.height);
-    ctx.fillStyle = '#111';
-    ctx.fillRect(player.x + 5, player.y + 10, player.width - 10, 15);
-    ctx.fillRect(player.x + 5, player.y + 45, player.width - 10, 15);
+function quitGame() {
+    isGameOver = true;
+    isPaused = false;
+    stopEngine();
+    // Assicura che l'audio del motore si fermi prima di uscire
+    engineSound.pause();
+    engineSound.currentTime = 0;
+    loadScreen('home'); 
 }
+
+function runGameLoop() {
+    if (isGameOver || isPaused) return; 
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    updatePlayer();       
+    increaseDifficulty(); 
+    drawRoad();           
+    manageEnemies();      
+    drawPlayer();         
+    drawLiscioEffects();  
+    
+    if (isContromano() && !player.isStarting && !player.isIgniting) {
+        let alpha = 0.7 + Math.sin(frames * 0.1) * 0.3;
+        ctx.fillStyle = `rgba(255, 50, 50, ${alpha})`;
+        ctx.font = "bold 20px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("⚠️ CONTROMANO: PUNTI X2 ⚠️", canvas.width / 2, 70);
+        ctx.textAlign = "left"; 
+    }
+    updateScore();        
+    totalDistance += player.speedZ; 
+
+    if (pitchDrop > 0) { pitchDrop -= 0.03; if (pitchDrop < 0) pitchDrop = 0; }
+    let pitch = 0.8 + (player.speedZ / playerProfile.stats.maxSpeed) * 1.5 - pitchDrop;
+    engineSound.playbackRate = Math.max(0.5, Math.min(pitch, 2.5));
+
+    frames++;
+    gameLoopId = requestAnimationFrame(runGameLoop);
+}
+
+function drawRoad() {
+    ctx.fillStyle = '#444'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    roadOffset = (roadOffset + player.speedZ) % 40; 
+    ctx.fillStyle = '#FFEB3B'; 
+    for (let i = -40; i < canvas.height; i += 40) {
+        ctx.fillRect(canvas.width / 2 - 3, i + roadOffset, 2, 20);
+        ctx.fillRect(canvas.width / 2 + 1, i + roadOffset, 2, 20);
+    }
+    ctx.fillStyle = 'white';
+    for (let i = -40; i < canvas.height; i += 40) {
+        ctx.fillRect(canvas.width / 4 - 2, i + roadOffset, 4, 20); 
+        ctx.fillRect((canvas.width / 4) * 3 - 2, i + roadOffset, 4, 20); 
+    }
+    if (totalDistance < canvas.height + 1000) {
+        let sostaY = (canvas.height - 300) + totalDistance; 
+        ctx.fillStyle = '#222'; ctx.fillRect(canvas.width - 50, sostaY, 50, 900);
+        ctx.fillStyle = 'white'; ctx.fillRect(canvas.width - 52, 0, 2, canvas.height); 
+        ctx.fillStyle = '#444'; ctx.fillRect(canvas.width - 52, sostaY + 100, 2, 700);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'; ctx.font = "bold 20px Arial";
+        ctx.fillText("AREA SOS", canvas.width - 48, sostaY + 300);
+    } else {
+        ctx.fillStyle = 'white'; ctx.fillRect(canvas.width - 5, 0, 5, canvas.height);
+        ctx.fillRect(0, 0, 5, canvas.height);
+    }
+}
+
+function updateScore() {
+    if (frames % 10 === 0 && !player.isStarting && !player.isIgniting && player.speedZ >= 1) {
+        let basePoints = Math.floor(player.speedZ / 3);
+        if (basePoints < 1) basePoints = 1;
+        score += isContromano() ? (basePoints * 2) : basePoints;
+        updateScoreDisplay();
+    }
+}
+
+function updateScoreDisplay() {
+    const scoreElement = document.getElementById('score');
+    if (scoreElement) scoreElement.innerText = `Punti: ${score}`;
+    const speedElement = document.getElementById('speedometer');
+    if (speedElement) speedElement.innerText = `${Math.floor(player.speedZ * 10)} km/h`;
+    
+    let visualSpeed = Math.floor(player.speedZ * 10);
+    
+    // --- LOGICA 6 MARCE ---
+    let newGear = 1;
+    if (visualSpeed > 125) newGear = 6;      // Sesta marcia
+    else if (visualSpeed > 100) newGear = 5;
+    else if (visualSpeed > 75) newGear = 4;
+    else if (visualSpeed > 50) newGear = 3;
+    else if (visualSpeed > 30) newGear = 2;
+
+    if (newGear > currentGear) {
+        player.shiftDelay = 18; // Cambio leggermente più lento per le marce alte
+        pitchDrop = 0.6; 
+    }
+    currentGear = newGear;
+    const gearElement = document.getElementById('gear-display');
+    if (gearElement) gearElement.innerText = `Marcia: ${currentGear}`;
+}
+
+function triggerGameOver() {
+    isGameOver = true;
+    engineSound.pause(); 
+    crashSound.currentTime = 0;
+    crashSound.play().catch(e => {});
+    stopEngine();
+    addBanknotes(Math.floor(score / 5)); 
+    window.lastScore = score; window.lastCash = Math.floor(score / 5);
+    setTimeout(() => { loadScreen('result'); }, 800);
+}
+
+function startEngine() { runGameLoop(); }
+function stopEngine() { cancelAnimationFrame(gameLoopId); engineSound.pause(); }
