@@ -2,6 +2,7 @@
 .full-screen {
     z-index: 100;
     background-color: #07070D;
+    justify-content: flex-start !important; /* canvas parte dall'alto */
 }
 
 /* ─── HUD (punteggio + pausa) ────────────────── */
@@ -67,7 +68,7 @@
     text-transform: uppercase;
 }
 
-/* Pulsante PAUSA */
+/* ─── PULSANTE PAUSA ─────────────────────────── */
 #btn-pause {
     background: rgba(7,7,13,0.75);
     border: 1px solid rgba(255,106,0,0.3);
@@ -108,7 +109,9 @@
     font-size: 32px;
     font-weight: 900;
     color: #FF6A00;
-    text-shadow: 0 0 15px rgba(255,106,0,0.8), 0 0 40px rgba(255,106,0,0.3);
+    text-shadow:
+        0 0 15px rgba(255,106,0,0.8),
+        0 0 40px rgba(255,106,0,0.3);
     letter-spacing: 0.15em;
     margin-bottom: 40px;
     animation: pause-blink 2s ease-in-out infinite;
@@ -124,11 +127,12 @@
     width: 220px;
     font-size: 15px;
     padding: 16px 0;
+    text-align: center;
 }
 
 /* ─── CANVAS ─────────────────────────────────── */
 canvas {
-    background-color: #3A3A3A;
+    background-color: #1a1a1a;
     display: block;
     /* Bordi stradali stile neon */
     border-left:  3px solid rgba(255,106,0,0.6);
@@ -138,4 +142,6 @@ canvas {
         -8px 0 20px rgba(255,106,0,0.15),
          8px 0 20px rgba(255,106,0,0.15),
          0 0 60px rgba(0,0,0,0.8);
+    /* Centrato verticalmente nella sezione */
+    margin-top: 0;
 }
