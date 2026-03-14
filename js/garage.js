@@ -17,10 +17,10 @@ const carCatalog = [
     }
 ];
 
-// Aggiornamento salvataggio alla V3 per supportare le auto sbloccate
+// Caricamento del profilo (V3 per supportare il nuovo sistema auto)
 let playerProfile = JSON.parse(localStorage.getItem('ryderzProfileV3')) || {
     banknotes: 0,
-    unlockedCars: [1], // ID delle auto sbloccate
+    unlockedCars: [1], 
     equippedCarId: 1
 };
 
@@ -33,11 +33,9 @@ function addBanknotes(amount) {
     saveProfile();
 }
 
-// --- LOGICA INTERFACCIA GARAGE ---
 let currentViewIndex = 0;
 
 function initGarage() {
-    // Trova l'indice dell'auto equipaggiata
     currentViewIndex = carCatalog.findIndex(c => c.id === playerProfile.equippedCarId);
     if(currentViewIndex === -1) currentViewIndex = 0;
     updateGarageUI();
@@ -55,7 +53,10 @@ function updateGarageUI() {
     const isUnlocked = playerProfile.unlockedCars.includes(car.id);
     const isEquipped = playerProfile.equippedCarId === car.id;
 
-    document.getElementById('g-car-img').src = car.imgGarage;
+    // Aggiorna l'immagine e i testi
+    const imgEl = document.getElementById('g-car-img');
+    if (imgEl) imgEl.src = car.imgGarage;
+    
     document.getElementById('g-car-name').innerText = car.name;
     document.getElementById('g-stat-speed').innerText = (car.stats.maxSpeed * 10) + " km/h";
     document.getElementById('g-stat-handling').innerText = car.stats.handling;
@@ -95,10 +96,9 @@ function buyCar(carId, price) {
         playerProfile.banknotes -= price;
         playerProfile.unlockedCars.push(carId);
         equipCar(carId);
-        // Se c'è l'elemento dei soldi nel menu in alto (se presente in questa schermata) aggiornalo
         const moneyEl = document.getElementById('home-banknotes');
         if (moneyEl) moneyEl.innerText = playerProfile.banknotes;
     } else {
-        alert("💵 Soldi insufficienti per questa auto!");
+        alert("💵 Soldi insufficienti!");
     }
 }
